@@ -1,0 +1,358 @@
+#!/bin/bash
+#
+# Generic Linux Development Environment Setup Script
+# Implements programming languages, version managers, and development tools
+# User Story 1.5: Development Environment Setup
+#
+
+set -euo pipefail
+
+# Get script directory and set up paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+LIB_DIR="$PROJECT_ROOT/lib"
+LOG_DIR="$PROJECT_ROOT/logs"
+
+# Early help check before sourcing libraries
+for arg in "$@"; do
+    if [[ "$arg" == "--help" ]]; then
+        cat << EOF
+💻 Generic Linux Development Environment Setup
+
+Usage: $0 [OPTIONS]
+
+OPTIONS:
+    --python         Install Python development environment only
+    --nodejs         Install Node.js development environment only  
+    --go             Install Go development environment only
+    --docker         Install Docker environment only
+    --vim            Configure vim for development only
+    --git            Configure Git only
+    --shell SHELL    Configure shell environment (bash/zsh)
+    --all            Setup complete development environment (default)
+    --git-user NAME  Git username for configuration
+    --git-email EMAIL Git email for configuration
+    --help           Show this help message
+
+EXAMPLES:
+    $0                                    # Setup complete development environment
+    $0 --python --nodejs                 # Setup Python and Node.js only
+    $0 --all --git-user "John Doe" --git-email "john@example.com"
+    $0 --shell zsh --vim --git           # Setup zsh, vim, and git only
+    $0 --docker                          # Setup Docker environment only
+
+DEVELOPMENT ENVIRONMENT INCLUDES:
+    🐍 Python: Python 3, pip, pyenv, virtualenv, poetry, black, pytest
+    📦 Node.js: nvm, Node.js LTS, npm, yarn, TypeScript, ESLint, Prettier
+    🔷 Go: Latest Go compiler, workspace setup, PATH configuration
+    📝 Vim: Development-focused configuration with syntax highlighting
+    🔧 Git: User config, aliases, SSH keys, global gitignore
+    🐳 Docker: Docker Engine, Docker Compose, user group setup
+    🐚 Shell: Development aliases, Git shortcuts, productivity tools
+
+EOF
+        exit 0
+    fi
+done
+
+# Source required libraries
+source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/common.sh"
+source "$LIB_DIR/distro_detect.sh"
+source "$LIB_DIR/package_manager.sh"
+
+# Initialize logging first
+setup_logging "setup-dev"
+
+# Source development environment library after logging is initialized
+source "$LIB_DIR/dev_environment.sh"
+
+# Command line options
+SETUP_PYTHON=false
+SETUP_NODEJS=false
+SETUP_GO=false
+SETUP_DOCKER=false
+SETUP_VIM=false
+SETUP_GIT=false
+SETUP_SHELL=false
+SETUP_ALL=true
+TARGET_SHELL="bash"
+GIT_USERNAME=""
+GIT_EMAIL=""
+
+# Function to show usage
+show_usage() {
+    cat << EOF
+💻 Generic Linux Development Environment Setup
+
+Usage: $0 [OPTIONS]
+
+OPTIONS:
+    --python         Install Python development environment only
+    --nodejs         Install Node.js development environment only  
+    --go             Install Go development environment only
+    --docker         Install Docker environment only
+    --vim            Configure vim for development only
+    --git            Configure Git only
+    --shell SHELL    Configure shell environment (bash/zsh)
+    --all            Setup complete development environment (default)
+    --git-user NAME  Git username for configuration
+    --git-email EMAIL Git email for configuration
+    --help           Show this help message
+
+EXAMPLES:
+    $0                                    # Setup complete development environment
+    $0 --python --nodejs                 # Setup Python and Node.js only
+    $0 --all --git-user "John Doe" --git-email "john@example.com"
+    $0 --shell zsh --vim --git           # Setup zsh, vim, and git only
+    $0 --docker                          # Setup Docker environment only
+
+DEVELOPMENT ENVIRONMENT INCLUDES:
+    🐍 Python: Python 3, pip, pyenv, virtualenv, poetry, black, pytest
+    📦 Node.js: nvm, Node.js LTS, npm, yarn, TypeScript, ESLint, Prettier
+    🔷 Go: Latest Go compiler, workspace setup, PATH configuration
+    📝 Vim: Development-focused configuration with syntax highlighting
+    🔧 Git: User config, aliases, SSH keys, global gitignore
+    🐳 Docker: Docker Engine, Docker Compose, user group setup
+    🐚 Shell: Development aliases, Git shortcuts, productivity tools
+
+EOF
+}
+
+# Parse command line arguments
+parse_arguments() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --python)
+                SETUP_PYTHON=true
+                SETUP_ALL=false
+                shift
+                ;;
+            --nodejs)
+                SETUP_NODEJS=true
+                SETUP_ALL=false
+                shift
+                ;;
+            --go)
+                SETUP_GO=true
+                SETUP_ALL=false
+                shift
+                ;;
+            --docker)
+                SETUP_DOCKER=true
+                SETUP_ALL=false
+                shift
+                ;;
+            --vim)
+                SETUP_VIM=true
+                SETUP_ALL=false
+                shift
+                ;;
+            --git)
+                SETUP_GIT=true
+                SETUP_ALL=false
+                shift
+                ;;
+            --shell)
+                if [[ -n "${2:-}" ]]; then
+                    TARGET_SHELL="$2"
+                    SETUP_SHELL=true
+                    SETUP_ALL=false
+                    shift 2
+                else
+                    echo "❌ --shell requires an argument (bash/zsh)"
+                    exit 1
+                fi
+                ;;
+            --all)
+                SETUP_ALL=true
+                shift
+                ;;
+            --git-user)
+                if [[ -n "${2:-}" ]]; then
+                    GIT_USERNAME="$2"
+                    shift 2
+                else
+                    echo "❌ --git-user requires an argument"
+                    exit 1
+                fi
+                ;;
+            --git-email)
+                if [[ -n "${2:-}" ]]; then
+                    GIT_EMAIL="$2"
+                    shift 2
+                else
+                    echo "❌ --git-email requires an argument"
+                    exit 1
+                fi
+                ;;
+            --help)
+                show_usage
+                exit 0
+                ;;
+            *)
+                echo "❌ Unknown option: $1"
+                show_usage
+                exit 1
+                ;;
+        esac
+    done
+}
+
+# Main function
+main() {
+    log_function_enter "main"
+    
+    # Parse arguments
+    parse_arguments "$@"
+    
+    # Start development environment setup
+    log_info "=== Starting Linux Development Environment Setup ==="
+    log_info "Script executed by: $(whoami)"
+    log_info "Working directory: $(pwd)"
+    log_info "Arguments: Python=$SETUP_PYTHON, Node.js=$SETUP_NODEJS, Go=$SETUP_GO, Docker=$SETUP_DOCKER, Vim=$SETUP_VIM, Git=$SETUP_GIT, Shell=$SETUP_SHELL($TARGET_SHELL), All=$SETUP_ALL"
+    
+    # Header
+    echo "💻 Linux Development Environment Setup"
+    echo "====================================="
+    echo "📝 Logging to: $LOG_FILE"
+    echo "🕐 $(date '+%Y-%m-%d %H:%M:%S')"
+    echo ""
+    
+    # Detect system information
+    detect_distribution
+    detect_package_manager
+    
+    # Show system info
+    echo "💻 System Information"
+    echo "   🖥️  Distribution: $DISTRO_NAME $DISTRO_VERSION ($DISTRO_CODENAME)"
+    echo "   🏗️  Architecture: $DISTRO_ARCHITECTURE"
+    echo "   📦 Package Manager: $PACKAGE_MANAGER"
+    echo ""
+    
+    # Set environment variables based on options
+    if [[ "$SETUP_ALL" == true ]]; then
+        # Setup complete development environment
+        INSTALL_PYTHON="true"
+        INSTALL_NODEJS="true"
+        INSTALL_GO="true"
+        INSTALL_DOCKER="true"
+        SETUP_VIM="true"
+        SETUP_GIT="true"
+        
+        setup_development_environment "$GIT_USERNAME" "$GIT_EMAIL" "$TARGET_SHELL"
+    else
+        # Setup individual components
+        local components_configured=0
+        local components_failed=0
+        
+        # Set environment variables for individual components
+        INSTALL_PYTHON="$SETUP_PYTHON"
+        INSTALL_NODEJS="$SETUP_NODEJS"
+        INSTALL_GO="$SETUP_GO"
+        INSTALL_DOCKER="$SETUP_DOCKER"
+        
+        if [[ "$SETUP_PYTHON" == true ]]; then
+            echo "🐍 Python Development Environment"
+            if install_python_environment; then
+                ((components_configured++))
+            else
+                ((components_failed++))
+            fi
+            echo ""
+        fi
+        
+        if [[ "$SETUP_NODEJS" == true ]]; then
+            echo "📦 Node.js Development Environment"
+            if install_nodejs_environment; then
+                ((components_configured++))
+            else
+                ((components_failed++))
+            fi
+            echo ""
+        fi
+        
+        if [[ "$SETUP_GO" == true ]]; then
+            echo "🔷 Go Development Environment"
+            if install_go_environment; then
+                ((components_configured++))
+            else
+                ((components_failed++))
+            fi
+            echo ""
+        fi
+        
+        if [[ "$SETUP_VIM" == true ]]; then
+            echo "📝 Vim Editor Configuration"
+            if configure_vim_development; then
+                ((components_configured++))
+            else
+                ((components_failed++))
+            fi
+            echo ""
+        fi
+        
+        if [[ "$SETUP_GIT" == true ]]; then
+            echo "🔧 Git Configuration"
+            if configure_git_development "$GIT_USERNAME" "$GIT_EMAIL"; then
+                ((components_configured++))
+            else
+                ((components_failed++))
+            fi
+            echo ""
+        fi
+        
+        if [[ "$SETUP_DOCKER" == true ]]; then
+            echo "🐳 Docker Environment"
+            if install_docker_environment; then
+                ((components_configured++))
+            else
+                ((components_failed++))
+            fi
+            echo ""
+        fi
+        
+        if [[ "$SETUP_SHELL" == true ]]; then
+            echo "🐚 Shell Environment Configuration"
+            if configure_shell_environment "$TARGET_SHELL"; then
+                ((components_configured++))
+            else
+                ((components_failed++))
+            fi
+            echo ""
+        fi
+        
+        # Individual components summary
+        echo "📊 Development Environment Setup Summary"
+        echo "======================================="
+        echo "✅ Components configured: $components_configured"
+        echo "❌ Components failed: $components_failed"
+        
+        if [[ $components_failed -eq 0 ]]; then
+            print_status "success" "Development environment setup completed successfully!"
+        else
+            print_status "warning" "Development environment setup completed with some failures"
+        fi
+    fi
+    
+    # Final summary
+    echo ""
+    echo "🎉 Development Environment Setup Complete!"
+    echo "📝 Detailed logs: $LOG_FILE"
+    echo ""
+    echo "🚀 Next Steps:"
+    echo "   1. Restart your terminal or run: source ~/.bashrc"
+    echo "   2. For Docker: logout and login to use Docker without sudo"
+    if [[ -n "$GIT_EMAIL" ]]; then
+        echo "   3. Add your SSH public key to GitHub/GitLab:"
+        echo "      cat ~/.ssh/id_ed25519.pub"
+    fi
+    
+    log_info "Linux development environment setup completed successfully"
+    log_function_exit "main" 0
+}
+
+# Only run main if script is executed directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

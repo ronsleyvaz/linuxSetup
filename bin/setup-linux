@@ -1,0 +1,193 @@
+#!/bin/bash
+#
+# Generic Linux Setup Script
+# Multi-distribution Linux system setup and configuration
+# Based on piSetup architecture but extended for multiple distributions
+#
+
+# Set strict error handling
+set -euo pipefail
+
+# Get script directory and set up paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+LIB_DIR="$PROJECT_ROOT/lib"
+CONFIG_DIR="$PROJECT_ROOT/config"
+LOG_DIR="$PROJECT_ROOT/logs"
+
+# Source library functions
+source "$LIB_DIR/common.sh"
+source "$LIB_DIR/distro_detect.sh"
+source "$LIB_DIR/package_manager.sh"
+source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/tool_installer.sh"
+
+# Initialize logging
+setup_logging "setup-linux"
+
+main() {
+    local install_tools=false
+    local list_categories=false
+    local verify_only=false
+    
+    # Parse command line arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --install-tools)
+                install_tools=true
+                shift
+                ;;
+            --list-categories)
+                list_categories=true
+                shift
+                ;;
+            --verify-tools)
+                verify_only=true
+                shift
+                ;;
+            --help|-h)
+                show_help
+                exit 0
+                ;;
+            *)
+                echo "Unknown option: $1"
+                show_help
+                exit 1
+                ;;
+        esac
+    done
+    
+    log_info "=== Starting Generic Linux Setup ==="
+    log_info "Script executed by: $(whoami)"
+    log_info "Working directory: $(pwd)"
+    log_info "Install tools: $install_tools"
+    log_info "Verify only: $verify_only"
+    
+    echo "🔧 Generic Linux Setup Script"
+    echo "----------------------------"
+    echo "📝 Logging to: $LOG_FILE"
+    
+    # Handle list categories option
+    if [[ "$list_categories" == true ]]; then
+        list_tool_categories
+        exit 0
+    fi
+    
+    # Step 1: Detect distribution
+    log_info "Step 1: Detecting Linux distribution..."
+    if detect_distribution; then
+        log_info "Detected: $DISTRO_NAME $DISTRO_VERSION ($DISTRO_ID)"
+        echo "✅ Detected: $DISTRO_NAME $DISTRO_VERSION"
+    else
+        log_error "Failed to detect Linux distribution"
+        echo "❌ Failed to detect Linux distribution"
+        exit 1
+    fi
+    
+    # Step 2: Initialize package manager
+    log_info "Step 2: Initializing package manager..."
+    if init_package_manager; then
+        log_info "Package manager initialized: $PACKAGE_MANAGER"
+        echo "✅ Package manager: $PACKAGE_MANAGER"
+    else
+        log_error "Failed to initialize package manager"
+        echo "❌ Failed to initialize package manager"
+        exit 1
+    fi
+    
+    # Step 3: Test package manager functionality
+    log_info "Step 3: Testing package manager functionality..."
+    if test_package_manager; then
+        log_info "Package manager test successful"
+        echo "✅ Package manager test successful"
+    else
+        log_error "Package manager test failed"
+        echo "❌ Package manager test failed"
+        exit 1
+    fi
+    
+    # Step 4: Handle tool installation or verification
+    if [[ "$verify_only" == true ]]; then
+        log_info "Step 4: Verifying essential tools..."
+        verify_essential_tools
+    elif [[ "$install_tools" == true ]]; then
+        log_info "Step 4: Installing essential tools..."
+        if install_essential_tools; then
+            log_info "Essential tools installation completed"
+            echo ""
+            echo "🔍 Verifying installation..."
+            verify_essential_tools
+            echo ""
+            echo "📊 Generating installation report..."
+            generate_installation_report
+        else
+            log_error "Essential tools installation failed"
+            echo "❌ Essential tools installation failed"
+            exit 1
+        fi
+    else
+        echo ""
+        echo "ℹ️  Foundation setup complete. To install essential tools, run:"
+        echo "   ./bin/setup-linux --install-tools"
+        echo ""
+        echo "📋 To see available tool categories, run:"
+        echo "   ./bin/setup-linux --list-categories"
+        echo ""
+        echo "🔍 To verify existing tools, run:"
+        echo "   ./bin/setup-linux --verify-tools"
+    fi
+    
+    log_info "=== Generic Linux Setup Complete ==="
+    echo ""
+    echo "🎉 Setup Complete!"
+    echo "----------------------------"
+    echo "✅ Distribution: $DISTRO_NAME $DISTRO_VERSION"
+    echo "✅ Package Manager: $PACKAGE_MANAGER"
+    if [[ "$install_tools" == true || "$verify_only" == true ]]; then
+        echo "✅ Tools: $(get_installation_stats | grep "Success rate" | cut -d: -f2)"
+    fi
+    echo "📝 Log file: $LOG_FILE"
+}
+
+# Function to show help
+show_help() {
+    cat << EOF
+Generic Linux Setup Script - v0.2.0
+
+USAGE:
+    ./bin/setup-linux [OPTIONS]
+
+OPTIONS:
+    --install-tools     Install essential development and system tools
+    --verify-tools      Verify existing tool installations
+    --list-categories   Show available tool categories
+    --help, -h          Show this help message
+
+EXAMPLES:
+    # Basic setup (distribution detection and package manager setup)
+    ./bin/setup-linux
+
+    # Complete setup with tool installation
+    ./bin/setup-linux --install-tools
+
+    # Verify existing tools
+    ./bin/setup-linux --verify-tools
+
+    # List available tool categories
+    ./bin/setup-linux --list-categories
+
+TOOL CATEGORIES:
+    - Core Development: git, vim, curl, wget
+    - Build Tools: build-essential/gcc
+    - Terminal Tools: screen, tmux, tree, htop, iotop
+    - Network Tools: nmap, tcpdump, rsync, netcat
+    - Archive Tools: zip, unzip, tar, gzip
+    - Productivity: fzf, bat, jq
+    - System Monitoring: lsof, strace
+
+For more information, see docs/README.md
+EOF
+}
+
+# Run main function
+main "$@"

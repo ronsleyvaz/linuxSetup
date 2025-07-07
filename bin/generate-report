@@ -1,0 +1,592 @@
+#!/bin/bash
+
+# System Report Generator for Generic Linux Setup System
+# Comprehensive system analysis and reporting
+
+# Strict error handling
+set -euo pipefail
+
+# Script directory and library loading
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
+
+# Source required libraries
+source "$LIB_DIR/common.sh"
+source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/distro_detect.sh"
+source "$LIB_DIR/system_analysis.sh"
+
+# Script metadata
+readonly SCRIPT_NAME="generate-report"
+readonly SCRIPT_VERSION="1.0.0"
+
+# Initialize logging
+LOG_FILE="$(dirname "$SCRIPT_DIR")/logs/generate-report-$(date +%Y%m%d-%H%M%S).log"
+init_logging "$LOG_FILE"
+
+# Default values
+DEFAULT_FORMAT="json"
+DEFAULT_OUTPUT_DIR="$(dirname "$SCRIPT_DIR")/reports"
+
+# Show help
+show_help() {
+    cat << EOF
+📊 Generic Linux System Report Generator
+
+Usage: $0 [OPTIONS]
+
+OPTIONS:
+    --format FORMAT     Output format: json, csv, html, text (default: json)
+    --output FILE       Output file path (default: auto-generated)
+    --output-dir DIR    Output directory (default: ./reports)
+    --all              Generate all report formats
+    --inventory        Generate system inventory report
+    --security         Generate security analysis report
+    --performance      Generate performance analysis report
+    --capacity         Generate capacity planning report
+    --compliance       Generate compliance report
+    --compare FILE     Compare with previous report
+    --verbose          Verbose output
+    --help             Show this help message
+
+REPORT TYPES:
+    inventory          Complete system inventory (hardware, software, network)
+    security           Security posture analysis and recommendations
+    performance        Performance metrics and analysis
+    capacity           Capacity planning and utilization trends
+    compliance         Configuration compliance and standards
+    full               All report types combined
+
+EXAMPLES:
+    # Generate complete system inventory in JSON
+    $0 --inventory --format json
+
+    # Generate all report types in all formats
+    $0 --all
+
+    # Generate security report in HTML format
+    $0 --security --format html --output security-report.html
+
+    # Generate performance report with verbose output
+    $0 --performance --verbose
+
+    # Compare current system with previous report
+    $0 --inventory --compare reports/previous-inventory.json
+
+    # Generate capacity planning report
+    $0 --capacity --format html --output-dir /var/reports
+
+REPORT FORMATS:
+    📄 JSON: Machine-readable structured data
+    📊 CSV: Spreadsheet-compatible tabular data
+    🌐 HTML: Interactive web-based reports with charts
+    📝 TEXT: Human-readable console output
+
+OUTPUT LOCATIONS:
+    Reports are saved to: $DEFAULT_OUTPUT_DIR/
+    Logs are saved to: logs/
+
+EOF
+}
+
+# Generate system inventory report
+generate_inventory_report() {
+    local format="$1"
+    local output_file="$2"
+    
+    print_status "info" "Generating system inventory report"
+    log_info "Generating system inventory report in $format format"
+    
+    # Create output directory if it doesn't exist
+    local output_dir
+    output_dir=$(dirname "$output_file")
+    mkdir -p "$output_dir"
+    
+    # Generate the inventory
+    if generate_system_inventory "$format" "$output_file"; then
+        print_status "success" "System inventory report generated: $output_file"
+        log_info "System inventory report saved to: $output_file"
+        return 0
+    else
+        print_status "error" "Failed to generate system inventory report"
+        log_error "Failed to generate system inventory report"
+        return 1
+    fi
+}
+
+# Generate security analysis report
+generate_security_report() {
+    local format="$1"
+    local output_file="$2"
+    
+    print_status "info" "Generating security analysis report"
+    log_info "Generating security analysis report in $format format"
+    
+    local security_data=()
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Collect security information
+    local firewall_status ssh_config user_audit service_status
+    
+    # Firewall analysis
+    if command -v ufw &>/dev/null; then
+        firewall_status=$(ufw status verbose 2>/dev/null)
+    elif command -v firewall-cmd &>/dev/null; then
+        firewall_status=$(firewall-cmd --list-all 2>/dev/null)
+    else
+        firewall_status="No firewall detected"
+    fi
+    
+    # SSH configuration analysis
+    if [[ -f "/etc/ssh/sshd_config" ]]; then
+        ssh_config=$(grep -E "^(Port|PermitRootLogin|PasswordAuthentication|PubkeyAuthentication)" /etc/ssh/sshd_config 2>/dev/null || echo "SSH config not accessible")
+    else
+        ssh_config="SSH not configured"
+    fi
+    
+    # User audit
+    user_audit=$(audit_user_permissions 2>/dev/null || echo "User audit failed")
+    
+    # Service status
+    service_status=$(systemctl list-units --type=service --state=failed 2>/dev/null || echo "Systemctl not available")
+    
+    # Generate report based on format
+    case "$format" in
+        "json")
+            cat > "$output_file" << EOF
+{
+  "timestamp": "$timestamp",
+  "security_analysis": {
+    "firewall": {
+      "status": "$(echo "$firewall_status" | head -1)",
+      "details": "$(echo "$firewall_status" | tail -n +2 | sed 's/"/\\"/g')"
+    },
+    "ssh": {
+      "configuration": "$(echo "$ssh_config" | sed 's/"/\\"/g')"
+    },
+    "users": {
+      "audit_results": "$(echo "$user_audit" | sed 's/"/\\"/g')"
+    },
+    "services": {
+      "failed_services": "$(echo "$service_status" | sed 's/"/\\"/g')"
+    }
+  }
+}
+EOF
+            ;;
+        "text")
+            cat > "$output_file" << EOF
+Security Analysis Report
+========================
+Generated: $timestamp
+
+🔥 Firewall Status
+------------------
+$firewall_status
+
+🔐 SSH Configuration
+--------------------
+$ssh_config
+
+👥 User Audit
+-------------
+$user_audit
+
+🔧 Failed Services
+------------------
+$service_status
+
+EOF
+            ;;
+        "html")
+            generate_html_security_report "$timestamp" "$firewall_status" "$ssh_config" "$user_audit" "$service_status" "$output_file"
+            ;;
+    esac
+    
+    print_status "success" "Security analysis report generated: $output_file"
+    log_info "Security analysis report saved to: $output_file"
+    return 0
+}
+
+# Generate performance analysis report
+generate_performance_report() {
+    local format="$1"
+    local output_file="$2"
+    
+    print_status "info" "Generating performance analysis report"
+    log_info "Generating performance analysis report in $format format"
+    
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Collect performance data
+    local cpu_info memory_info disk_info load_info process_info
+    cpu_info=$(get_cpu_information)
+    memory_info=$(get_memory_information)
+    disk_info=$(get_disk_information)
+    load_info=$(uptime)
+    process_info=$(ps aux --sort=-%cpu | head -10)
+    
+    case "$format" in
+        "json")
+            cat > "$output_file" << EOF
+{
+  "timestamp": "$timestamp",
+  "performance_analysis": {
+    "cpu": "$(echo "$cpu_info" | sed 's/"/\\"/g')",
+    "memory": "$(echo "$memory_info" | sed 's/"/\\"/g')",
+    "disk": "$(echo "$disk_info" | sed 's/"/\\"/g')",
+    "load": "$(echo "$load_info" | sed 's/"/\\"/g')",
+    "top_processes": "$(echo "$process_info" | sed 's/"/\\"/g')"
+  }
+}
+EOF
+            ;;
+        "text")
+            cat > "$output_file" << EOF
+Performance Analysis Report
+===========================
+Generated: $timestamp
+
+💻 CPU Information
+------------------
+$cpu_info
+
+💾 Memory Information
+--------------------
+$memory_info
+
+💿 Disk Information
+-------------------
+$disk_info
+
+⚡ System Load
+-------------
+$load_info
+
+🔝 Top Processes (by CPU)
+-------------------------
+$process_info
+
+EOF
+            ;;
+    esac
+    
+    print_status "success" "Performance analysis report generated: $output_file"
+    log_info "Performance analysis report saved to: $output_file"
+    return 0
+}
+
+# Generate capacity planning report
+generate_capacity_report() {
+    local format="$1"
+    local output_file="$2"
+    
+    print_status "info" "Generating capacity planning report"
+    log_info "Generating capacity planning report in $format format"
+    
+    local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    
+    # Collect capacity data
+    local memory_usage disk_usage cpu_usage recommendations
+    memory_usage=$(free -h)
+    disk_usage=$(df -h)
+    cpu_usage=$(top -bn1 | grep "Cpu(s)")
+    
+    # Generate recommendations
+    recommendations=""
+    
+    # Memory recommendations
+    local mem_percent
+    mem_percent=$(free | grep Mem | awk '{printf "%.0f", $3/$2 * 100.0}')
+    if [[ "$mem_percent" -gt 85 ]]; then
+        recommendations+="- Memory usage is high ($mem_percent%), consider adding more RAM\n"
+    fi
+    
+    # Disk recommendations
+    local disk_percent
+    disk_percent=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
+    if [[ "$disk_percent" -gt 85 ]]; then
+        recommendations+="- Root filesystem usage is high ($disk_percent%), consider cleanup or expansion\n"
+    fi
+    
+    case "$format" in
+        "json")
+            cat > "$output_file" << EOF
+{
+  "timestamp": "$timestamp",
+  "capacity_planning": {
+    "memory_usage": "$(echo "$memory_usage" | sed 's/"/\\"/g')",
+    "disk_usage": "$(echo "$disk_usage" | sed 's/"/\\"/g')",
+    "cpu_usage": "$(echo "$cpu_usage" | sed 's/"/\\"/g')",
+    "recommendations": "$(echo -e "$recommendations" | sed 's/"/\\"/g')"
+  }
+}
+EOF
+            ;;
+        "text")
+            cat > "$output_file" << EOF
+Capacity Planning Report
+========================
+Generated: $timestamp
+
+💾 Memory Usage
+---------------
+$memory_usage
+
+💿 Disk Usage
+-------------
+$disk_usage
+
+💻 CPU Usage
+------------
+$cpu_usage
+
+📋 Recommendations
+------------------
+$(echo -e "$recommendations")
+
+EOF
+            ;;
+    esac
+    
+    print_status "success" "Capacity planning report generated: $output_file"
+    log_info "Capacity planning report saved to: $output_file"
+    return 0
+}
+
+# Generate HTML security report
+generate_html_security_report() {
+    local timestamp="$1"
+    local firewall_status="$2"
+    local ssh_config="$3"
+    local user_audit="$4"
+    local service_status="$5"
+    local output_file="$6"
+    
+    cat > "$output_file" << EOF
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Security Analysis Report</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background-color: #f0f0f0; padding: 20px; border-radius: 5px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+        h1, h2 { color: #333; }
+        .timestamp { color: #666; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔒 Security Analysis Report</h1>
+        <p class="timestamp">Generated: $timestamp</p>
+        <p>System: $(hostname) - $DISTRO_NAME $DISTRO_VERSION</p>
+    </div>
+    
+    <div class="section">
+        <h2>🔥 Firewall Status</h2>
+        <pre>$firewall_status</pre>
+    </div>
+    
+    <div class="section">
+        <h2>🔐 SSH Configuration</h2>
+        <pre>$ssh_config</pre>
+    </div>
+    
+    <div class="section">
+        <h2>👥 User Audit</h2>
+        <pre>$user_audit</pre>
+    </div>
+    
+    <div class="section">
+        <h2>🔧 Service Status</h2>
+        <pre>$service_status</pre>
+    </div>
+    
+    <div class="section">
+        <h2>📋 Security Recommendations</h2>
+        <ul>
+            <li>Regularly update system packages</li>
+            <li>Monitor failed login attempts</li>
+            <li>Review user permissions periodically</li>
+            <li>Keep SSH keys up to date</li>
+            <li>Enable automatic security updates</li>
+        </ul>
+    </div>
+</body>
+</html>
+EOF
+}
+
+# Main function
+main() {
+    # Print header
+    print_header "📊 Linux System Report Generator" "$SCRIPT_VERSION"
+    
+    # Detect distribution
+    detect_distribution
+    log_info "Distribution: $DISTRO_NAME $DISTRO_VERSION ($DISTRO_FAMILY)"
+    
+    # Parse arguments
+    local format="$DEFAULT_FORMAT"
+    local output_file=""
+    local output_dir="$DEFAULT_OUTPUT_DIR"
+    local report_type=""
+    local verbose=false
+    local generate_all=false
+    local compare_file=""
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --format)
+                format="$2"
+                shift 2
+                ;;
+            --output)
+                output_file="$2"
+                shift 2
+                ;;
+            --output-dir)
+                output_dir="$2"
+                shift 2
+                ;;
+            --inventory)
+                report_type="inventory"
+                shift
+                ;;
+            --security)
+                report_type="security"
+                shift
+                ;;
+            --performance)
+                report_type="performance"
+                shift
+                ;;
+            --capacity)
+                report_type="capacity"
+                shift
+                ;;
+            --compliance)
+                report_type="compliance"
+                shift
+                ;;
+            --all)
+                generate_all=true
+                shift
+                ;;
+            --compare)
+                compare_file="$2"
+                shift 2
+                ;;
+            --verbose)
+                verbose=true
+                shift
+                ;;
+            --help|-h)
+                show_help
+                exit 0
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                echo "Use --help for usage information"
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Create output directory
+    mkdir -p "$output_dir"
+    log_info "Output directory: $output_dir"
+    
+    # Generate reports
+    if [[ "$generate_all" == true ]]; then
+        local formats=("json" "html" "text")
+        local types=("inventory" "security" "performance" "capacity")
+        
+        for fmt in "${formats[@]}"; do
+            for type in "${types[@]}"; do
+                local auto_output="$output_dir/system-${type}-$(date +%Y%m%d-%H%M%S).$fmt"
+                
+                case "$type" in
+                    "inventory")
+                        generate_inventory_report "$fmt" "$auto_output"
+                        ;;
+                    "security")
+                        generate_security_report "$fmt" "$auto_output"
+                        ;;
+                    "performance")
+                        generate_performance_report "$fmt" "$auto_output"
+                        ;;
+                    "capacity")
+                        generate_capacity_report "$fmt" "$auto_output"
+                        ;;
+                esac
+            done
+        done
+    else
+        # Generate specific report type
+        if [[ -z "$report_type" ]]; then
+            report_type="inventory"
+        fi
+        
+        if [[ -z "$output_file" ]]; then
+            local extension
+            case "$format" in
+                "json") extension="json" ;;
+                "csv") extension="csv" ;;
+                "html") extension="html" ;;
+                "text") extension="txt" ;;
+                *) extension="txt" ;;
+            esac
+            output_file="$output_dir/system-${report_type}-$(date +%Y%m%d-%H%M%S).$extension"
+        fi
+        
+        case "$report_type" in
+            "inventory")
+                generate_inventory_report "$format" "$output_file"
+                ;;
+            "security")
+                generate_security_report "$format" "$output_file"
+                ;;
+            "performance")
+                generate_performance_report "$format" "$output_file"
+                ;;
+            "capacity")
+                generate_capacity_report "$format" "$output_file"
+                ;;
+            *)
+                log_error "Unknown report type: $report_type"
+                exit 1
+                ;;
+        esac
+    fi
+    
+    # Success message
+    print_status "success" "Report generation completed"
+    log_info "Report generation completed successfully"
+    
+    # Show log location
+    echo ""
+    print_status "info" "Reports saved to: $output_dir"
+    print_status "info" "Detailed logs: $LOG_FILE"
+}
+
+# Print header function
+print_header() {
+    local title="$1"
+    local version="$2"
+    
+    echo "$title"
+    echo "$(printf '=%.0s' $(seq 1 ${#title}))"
+    echo "📝 Logging to: $LOG_FILE"
+    echo "🕐 $(date '+%Y-%m-%d %H:%M:%S')"
+    echo ""
+}
+
+# Run main function
+main "$@"

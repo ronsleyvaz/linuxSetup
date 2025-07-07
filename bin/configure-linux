@@ -1,0 +1,269 @@
+#!/bin/bash
+#
+# Generic Linux Service Configuration Script
+# Implements SSH, firewall, NTP, and security hardening
+# User Story 1.3: Service Configuration
+#
+
+set -euo pipefail
+
+# Get script directory and set up paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+LIB_DIR="$PROJECT_ROOT/lib"
+LOG_DIR="$PROJECT_ROOT/logs"
+
+# Early help check before sourcing libraries
+for arg in "$@"; do
+    if [[ "$arg" == "--help" ]]; then
+        cat << EOF
+🔧 Generic Linux Service Configuration
+
+Usage: $0 [OPTIONS]
+
+OPTIONS:
+    --ssh-only       Configure SSH service only
+    --firewall-only  Configure firewall only
+    --ntp-only       Configure time synchronization only
+    --fail2ban-only  Configure fail2ban only
+    --all            Configure all services (default)
+    --report         Generate configuration report
+    --help           Show this help message
+
+EXAMPLES:
+    $0                    # Configure all services
+    $0 --ssh-only        # Configure SSH only
+    $0 --all --report    # Configure all and generate report
+    $0 --firewall-only   # Configure firewall only
+
+SERVICES CONFIGURED:
+    🔐 SSH: Secure configuration, key auth, disable root login
+    🔥 UFW: Firewall with SSH rate limiting and essential rules
+    ⏰ NTP: Time synchronization (systemd-timesyncd or ntpd)
+    🛡️ fail2ban: SSH brute force protection
+
+EOF
+        exit 0
+    fi
+done
+
+# Source required libraries
+source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/common.sh"
+source "$LIB_DIR/distro_detect.sh"
+source "$LIB_DIR/package_manager.sh"
+
+# Initialize logging first
+setup_logging "configure-linux"
+
+# Source service configuration library after logging is initialized
+source "$LIB_DIR/service_config.sh"
+
+# Command line options
+CONFIG_SSH=false
+CONFIG_FIREWALL=false
+CONFIG_NTP=false
+CONFIG_FAIL2BAN=false
+CONFIG_ALL=true
+GENERATE_REPORT=false
+
+# Function to show usage
+show_usage() {
+    cat << EOF
+🔧 Generic Linux Service Configuration
+
+Usage: $0 [OPTIONS]
+
+OPTIONS:
+    --ssh-only       Configure SSH service only
+    --firewall-only  Configure firewall only
+    --ntp-only       Configure time synchronization only
+    --fail2ban-only  Configure fail2ban only
+    --all            Configure all services (default)
+    --report         Generate configuration report
+    --help           Show this help message
+
+EXAMPLES:
+    $0                    # Configure all services
+    $0 --ssh-only        # Configure SSH only
+    $0 --all --report    # Configure all and generate report
+    $0 --firewall-only   # Configure firewall only
+
+SERVICES CONFIGURED:
+    🔐 SSH: Secure configuration, key auth, disable root login
+    🔥 UFW: Firewall with SSH rate limiting and essential rules
+    ⏰ NTP: Time synchronization (systemd-timesyncd or ntpd)
+    🛡️ fail2ban: SSH brute force protection
+
+EOF
+}
+
+# Parse command line arguments
+parse_arguments() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --ssh-only)
+                CONFIG_SSH=true
+                CONFIG_ALL=false
+                shift
+                ;;
+            --firewall-only)
+                CONFIG_FIREWALL=true
+                CONFIG_ALL=false
+                shift
+                ;;
+            --ntp-only)
+                CONFIG_NTP=true
+                CONFIG_ALL=false
+                shift
+                ;;
+            --fail2ban-only)
+                CONFIG_FAIL2BAN=true
+                CONFIG_ALL=false
+                shift
+                ;;
+            --all)
+                CONFIG_ALL=true
+                shift
+                ;;
+            --report)
+                GENERATE_REPORT=true
+                shift
+                ;;
+            --help)
+                show_usage
+                exit 0
+                ;;
+            *)
+                echo "❌ Unknown option: $1"
+                show_usage
+                exit 1
+                ;;
+        esac
+    done
+}
+
+# Main function
+main() {
+    log_function_enter "main"
+    
+    # Parse arguments
+    parse_arguments "$@"
+    
+    # Start configuration
+    log_info "=== Starting Linux Service Configuration ==="
+    log_info "Script executed by: $(whoami)"
+    log_info "Working directory: $(pwd)"
+    log_info "Arguments: SSH=$CONFIG_SSH, Firewall=$CONFIG_FIREWALL, NTP=$CONFIG_NTP, fail2ban=$CONFIG_FAIL2BAN, All=$CONFIG_ALL, Report=$GENERATE_REPORT"
+    
+    # Header
+    echo "🔧 Linux Service Configuration"
+    echo "=============================="
+    echo "📝 Logging to: $LOG_FILE"
+    echo "🕐 $(date '+%Y-%m-%d %H:%M:%S')"
+    echo ""
+    
+    # Detect system information
+    detect_distribution
+    detect_package_manager
+    
+    # Show system info
+    echo "💻 System Information"
+    echo "   🖥️  Distribution: $DISTRO_NAME $DISTRO_VERSION ($DISTRO_CODENAME)"
+    echo "   🏗️  Architecture: $DISTRO_ARCHITECTURE"
+    echo "   📦 Package Manager: $PACKAGE_MANAGER"
+    echo ""
+    
+    # Check for root/sudo access
+    if [[ $EUID -eq 0 ]]; then
+        print_status "info" "Running as root"
+    elif sudo -n true 2>/dev/null; then
+        print_status "info" "Sudo access confirmed"
+    else
+        print_status "error" "This script requires root or sudo access"
+        echo "Please run with: sudo $0 $*"
+        exit 1
+    fi
+    
+    # Configure services based on options
+    if [[ "$CONFIG_ALL" == true ]]; then
+        # Configure all services
+        configure_all_services
+    else
+        # Configure individual services
+        local services_configured=0
+        local services_failed=0
+        
+        if [[ "$CONFIG_SSH" == true ]]; then
+            echo "🔐 SSH Service Configuration"
+            if configure_ssh_service; then
+                ((services_configured++))
+            else
+                ((services_failed++))
+            fi
+            echo ""
+        fi
+        
+        if [[ "$CONFIG_FIREWALL" == true ]]; then
+            echo "🔥 Firewall Configuration"
+            if configure_ufw_firewall; then
+                ((services_configured++))
+            else
+                ((services_failed++))
+            fi
+            echo ""
+        fi
+        
+        if [[ "$CONFIG_NTP" == true ]]; then
+            echo "⏰ Time Synchronization Configuration"
+            if configure_time_sync; then
+                ((services_configured++))
+            else
+                ((services_failed++))
+            fi
+            echo ""
+        fi
+        
+        if [[ "$CONFIG_FAIL2BAN" == true ]]; then
+            echo "🛡️ fail2ban Configuration"
+            if configure_fail2ban; then
+                ((services_configured++))
+            else
+                ((services_failed++))
+            fi
+            echo ""
+        fi
+        
+        # Individual service summary
+        echo "📊 Configuration Summary"
+        echo "======================"
+        echo "✅ Services configured: $services_configured"
+        echo "❌ Services failed: $services_failed"
+        
+        if [[ $services_failed -eq 0 ]]; then
+            print_status "success" "Service configuration completed successfully!"
+        else
+            print_status "warning" "Service configuration completed with some failures"
+        fi
+    fi
+    
+    # Generate report if requested
+    if [[ "$GENERATE_REPORT" == true ]]; then
+        echo ""
+        generate_service_config_report
+    fi
+    
+    # Final summary
+    echo ""
+    echo "🎉 Service Configuration Complete!"
+    echo "📝 Detailed logs: $LOG_FILE"
+    echo "💾 Configuration backups: $CONFIG_BACKUP_DIR"
+    
+    log_info "Linux service configuration completed successfully"
+    log_function_exit "main" 0
+}
+
+# Only run main if script is executed directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

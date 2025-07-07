@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "Bash(./bin/setup-linux)",
+      "Bash(./tests/run_basic_tests.sh:*)",
+      "Bash(./bin/setup-linux:*)",
+      "Bash(timeout:*)",
+      "Bash(./bin/check-linux:*)",
+      "Bash(systemctl:*)",
+      "Bash(./bin/configure-linux:*)",
+      "Bash(command -v:*)",
+      "Bash(LOG_LEVEL=DEBUG ./bin/configure-linux --ntp-only 2 >& 1)",
+      "Bash(./bin/setup-dev:*)",
+      "Bash(./bin/generate-report:*)"
+    ],
+    "deny": []
+  }
+}

@@ -1,0 +1,202 @@
+#!/bin/bash
+#
+# Generic Linux System Health Monitoring Script
+# Based on piSetup architecture, adapted for multi-distribution Linux
+# User Story 2.1: Real-time System Status
+#
+
+set -euo pipefail
+
+# Get script directory and set up paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+LIB_DIR="$PROJECT_ROOT/lib"
+LOG_DIR="$PROJECT_ROOT/logs"
+
+# Early argument parsing for help and quick mode
+QUICK_MODE_CHECK=false
+for arg in "$@"; do
+    if [[ "$arg" == "--quick" ]]; then
+        QUICK_MODE_CHECK=true
+    fi
+    if [[ "$arg" == "--help" ]]; then
+        cat << EOF
+🔍 Generic Linux System Health Check
+
+Usage: $0 [OPTIONS]
+
+OPTIONS:
+    --report         Generate detailed system report
+    --verbose        Show detailed information
+    --quick          Quick health check (basic info only)
+    --services       Check service status
+    --json          Export results in JSON format
+    --help          Show this help message
+
+EXAMPLES:
+    $0                    # Basic system health check
+    $0 --quick           # Quick system overview
+    $0 --services        # Include service status check
+    $0 --report --json   # Generate detailed report in JSON
+    $0 --verbose         # Show all available information
+
+EOF
+        exit 0
+    fi
+done
+
+# Source required libraries
+source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/common.sh"
+source "$LIB_DIR/distro_detect.sh"
+source "$LIB_DIR/package_manager.sh"
+
+# Initialize logging first
+setup_logging "check-linux"
+
+# Source system health library after logging is initialized
+source "$LIB_DIR/system_health.sh"
+
+# Command line options
+GENERATE_REPORT=false
+VERBOSE=false
+QUICK_MODE=false
+SERVICE_CHECK=false
+EXPORT_JSON=false
+
+# Function to show usage
+show_usage() {
+    cat << EOF
+🔍 Generic Linux System Health Check
+
+Usage: $0 [OPTIONS]
+
+OPTIONS:
+    --report         Generate detailed system report
+    --verbose        Show detailed information
+    --quick          Quick health check (basic info only)
+    --services       Check service status
+    --json          Export results in JSON format
+    --help          Show this help message
+
+EXAMPLES:
+    $0                    # Basic system health check
+    $0 --quick           # Quick system overview
+    $0 --services        # Include service status check
+    $0 --report --json   # Generate detailed report in JSON
+    $0 --verbose         # Show all available information
+
+EOF
+}
+
+# Parse command line arguments
+parse_arguments() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --report)
+                GENERATE_REPORT=true
+                shift
+                ;;
+            --verbose)
+                VERBOSE=true
+                shift
+                ;;
+            --quick)
+                QUICK_MODE=true
+                shift
+                ;;
+            --services)
+                SERVICE_CHECK=true
+                shift
+                ;;
+            --json)
+                EXPORT_JSON=true
+                shift
+                ;;
+            --help)
+                show_usage
+                exit 0
+                ;;
+            *)
+                echo "❌ Unknown option: $1"
+                show_usage
+                exit 1
+                ;;
+        esac
+    done
+}
+
+# Main function
+main() {
+    log_function_enter "main"
+    
+    # Parse arguments
+    parse_arguments "$@"
+    
+    # Start health check
+    log_info "=== Starting Linux System Health Check ==="
+    log_info "Script executed by: $(whoami)"
+    log_info "Working directory: $(pwd)"
+    log_info "Arguments: Generate report=$GENERATE_REPORT, Verbose=$VERBOSE, Quick=$QUICK_MODE, Services=$SERVICE_CHECK, JSON=$EXPORT_JSON"
+    
+    # Header
+    echo "🔍 Linux System Health Check"
+    echo "-----------------------------"
+    echo "📝 Logging to: $LOG_FILE"
+    echo "🕐 $(date '+%Y-%m-%d %H:%M:%S')"
+    echo ""
+    
+    # Detect system information
+    detect_distribution
+    detect_package_manager
+    
+    # Basic system information
+    display_system_info
+    
+    # Performance metrics
+    display_performance_metrics
+    
+    # Network information
+    display_network_info
+    
+    # Service checks (if requested)
+    if [[ "$SERVICE_CHECK" == true || "$GENERATE_REPORT" == true ]]; then
+        display_service_status
+    fi
+    
+    # Essential tools verification
+    if [[ "$VERBOSE" == true || "$GENERATE_REPORT" == true ]]; then
+        display_essential_tools_status
+    fi
+    
+    # Security status
+    if [[ "$VERBOSE" == true || "$GENERATE_REPORT" == true ]]; then
+        display_security_status
+    fi
+    
+    # System issues detection
+    detect_system_issues
+    
+    # Generate reports if requested
+    if [[ "$GENERATE_REPORT" == true ]]; then
+        generate_system_report
+    fi
+    
+    if [[ "$EXPORT_JSON" == true ]]; then
+        export_json_report
+    fi
+    
+    # Summary
+    echo ""
+    echo "🎉 System Health Check Complete!"
+    echo "📊 Overall Status: $(get_overall_system_status)"
+    echo "📝 Detailed logs: $LOG_FILE"
+    
+    log_info "Linux system health check completed successfully"
+    log_function_exit "main" 0
+}
+
+# Only run main if script is executed directly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi

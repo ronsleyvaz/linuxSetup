@@ -1,0 +1,306 @@
+#!/bin/bash
+
+# User Management Script for Generic Linux Setup System
+# Handles user creation, permission setup, and SSH key management
+
+# Strict error handling
+set -euo pipefail
+
+# Script directory and library loading
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
+
+# Source required libraries
+source "$LIB_DIR/common.sh"
+source "$LIB_DIR/logging.sh"
+source "$LIB_DIR/distro_detect.sh"
+source "$LIB_DIR/user_management.sh"
+
+# Script metadata
+readonly SCRIPT_NAME="manage-users"
+readonly SCRIPT_VERSION="1.0.0"
+
+# Initialize logging
+LOG_FILE="$(dirname "$SCRIPT_DIR")/logs/manage-users-$(date +%Y%m%d-%H%M%S).log"
+init_logging "$LOG_FILE"
+
+# Show help
+show_help() {
+    cat << EOF
+🔧 Generic Linux User Management
+
+Usage: $0 [ACTION] [OPTIONS]
+
+ACTIONS:
+    create USER [FULL_NAME] [SSH_KEY]    Create new administrative user
+    setup-ssh USER SSH_KEY              Setup SSH key for existing user
+    generate-key USER [EMAIL]           Generate SSH key pair for user
+    secure-permissions                  Setup secure file permissions
+    configure-sudo USER [RULES]         Configure sudo access for user
+    setup-password-policies             Setup password policies
+    remove USER [--remove-home]         Remove user account
+    list-sudo                           List users with sudo access
+    audit                               Audit user permissions
+    help                                Show this help message
+
+EXAMPLES:
+    # Create new admin user
+    $0 create john "John Doe"
+
+    # Create user with SSH key
+    $0 create alice "Alice Smith" "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGKj..."
+
+    # Generate SSH key for existing user
+    $0 generate-key bob bob@example.com
+
+    # Setup SSH key for user
+    $0 setup-ssh carol "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC..."
+
+    # Configure sudo access
+    $0 configure-sudo dave "ALL=(ALL:ALL) NOPASSWD: ALL"
+
+    # Remove user
+    $0 remove eve --remove-home
+
+    # List all sudo users
+    $0 list-sudo
+
+    # Audit user permissions
+    $0 audit
+
+    # Setup secure permissions
+    $0 secure-permissions
+
+    # Setup password policies
+    $0 setup-password-policies
+
+USER MANAGEMENT FEATURES:
+    🔐 Administrative user creation with sudo privileges
+    🔑 SSH key setup and generation
+    🛡️ Secure file permission configuration
+    📋 User and permission auditing
+    ⚖️ Password policy enforcement
+    🗑️ Safe user removal with backup options
+
+EOF
+}
+
+# Main function
+main() {
+    # Print header
+    print_header "🔧 Linux User Management" "$SCRIPT_VERSION"
+    
+    # Check if running with appropriate privileges
+    if [[ $EUID -eq 0 ]]; then
+        log_warn "Running as root user"
+    else
+        ensure_sudo
+        log_info "Sudo access confirmed"
+    fi
+    
+    # Detect distribution
+    detect_distribution
+    log_info "Distribution: $DISTRO_NAME $DISTRO_VERSION ($DISTRO_FAMILY)"
+    
+    # Parse arguments
+    if [[ $# -eq 0 ]]; then
+        show_help
+        exit 0
+    fi
+    
+    local action="$1"
+    shift
+    
+    case "$action" in
+        "create")
+            if [[ $# -eq 0 ]]; then
+                log_error "Username required for create action"
+                echo "Usage: $0 create USERNAME [FULL_NAME] [SSH_KEY]"
+                exit 1
+            fi
+            
+            local username="$1"
+            local full_name="${2:-}"
+            local ssh_key="${3:-}"
+            
+            print_status "info" "Creating administrative user: $username"
+            
+            if create_admin_user "$username" "$full_name" "$ssh_key"; then
+                print_status "success" "User $username created successfully"
+                
+                # Generate SSH key if not provided
+                if [[ -z "$ssh_key" ]]; then
+                    print_status "info" "Generating SSH key for $username"
+                    if generate_ssh_key "$username"; then
+                        print_status "success" "SSH key generated for $username"
+                    fi
+                fi
+                
+                # Setup secure permissions
+                setup_secure_permissions
+                
+                print_status "success" "User management completed for $username"
+            else
+                print_status "error" "Failed to create user $username"
+                exit 1
+            fi
+            ;;
+            
+        "setup-ssh")
+            if [[ $# -lt 2 ]]; then
+                log_error "Username and SSH key required"
+                echo "Usage: $0 setup-ssh USERNAME SSH_KEY"
+                exit 1
+            fi
+            
+            local username="$1"
+            local ssh_key="$2"
+            
+            print_status "info" "Setting up SSH key for user: $username"
+            
+            if setup_ssh_key "$username" "$ssh_key"; then
+                print_status "success" "SSH key configured for $username"
+            else
+                print_status "error" "Failed to setup SSH key for $username"
+                exit 1
+            fi
+            ;;
+            
+        "generate-key")
+            if [[ $# -eq 0 ]]; then
+                log_error "Username required"
+                echo "Usage: $0 generate-key USERNAME [EMAIL]"
+                exit 1
+            fi
+            
+            local username="$1"
+            local email="${2:-$username@$(hostname)}"
+            
+            print_status "info" "Generating SSH key for user: $username"
+            
+            if pub_key=$(generate_ssh_key "$username" "$email"); then
+                print_status "success" "SSH key generated for $username"
+                echo ""
+                echo "🔑 Public key (add to GitHub/GitLab/servers):"
+                echo "$pub_key"
+                echo ""
+            else
+                print_status "error" "Failed to generate SSH key for $username"
+                exit 1
+            fi
+            ;;
+            
+        "secure-permissions")
+            print_status "info" "Setting up secure file permissions"
+            
+            if setup_secure_permissions; then
+                print_status "success" "Secure permissions configured"
+            else
+                print_status "error" "Failed to setup secure permissions"
+                exit 1
+            fi
+            ;;
+            
+        "configure-sudo")
+            if [[ $# -eq 0 ]]; then
+                log_error "Username required"
+                echo "Usage: $0 configure-sudo USERNAME [SUDO_RULES]"
+                exit 1
+            fi
+            
+            local username="$1"
+            local sudo_rules="${2:-ALL=(ALL:ALL) ALL}"
+            
+            print_status "info" "Configuring sudo access for user: $username"
+            
+            if configure_sudo_access "$username" "$sudo_rules"; then
+                print_status "success" "Sudo access configured for $username"
+            else
+                print_status "error" "Failed to configure sudo access for $username"
+                exit 1
+            fi
+            ;;
+            
+        "setup-password-policies")
+            print_status "info" "Setting up password policies"
+            
+            if setup_password_policies; then
+                print_status "success" "Password policies configured"
+            else
+                print_status "error" "Failed to setup password policies"
+                exit 1
+            fi
+            ;;
+            
+        "remove")
+            if [[ $# -eq 0 ]]; then
+                log_error "Username required"
+                echo "Usage: $0 remove USERNAME [--remove-home]"
+                exit 1
+            fi
+            
+            local username="$1"
+            local remove_home="false"
+            
+            if [[ $# -gt 1 && "$2" == "--remove-home" ]]; then
+                remove_home="true"
+            fi
+            
+            print_status "info" "Removing user: $username"
+            
+            if remove_user "$username" "$remove_home"; then
+                print_status "success" "User $username removed successfully"
+            else
+                print_status "error" "Failed to remove user $username"
+                exit 1
+            fi
+            ;;
+            
+        "list-sudo")
+            print_status "info" "Listing users with sudo access"
+            echo ""
+            list_sudo_users
+            echo ""
+            ;;
+            
+        "audit")
+            print_status "info" "Auditing user permissions"
+            echo ""
+            audit_user_permissions
+            echo ""
+            ;;
+            
+        "help"|"--help"|"-h")
+            show_help
+            ;;
+            
+        *)
+            log_error "Unknown action: $action"
+            echo "Use '$0 help' for usage information"
+            exit 1
+            ;;
+    esac
+    
+    # Success message
+    print_status "success" "User management operation completed"
+    log_info "User management operation completed successfully"
+    
+    # Show log location
+    echo ""
+    print_status "info" "Detailed logs: $LOG_FILE"
+}
+
+# Print header function
+print_header() {
+    local title="$1"
+    local version="$2"
+    
+    echo "$title"
+    echo "$(printf '=%.0s' $(seq 1 ${#title}))"
+    echo "📝 Logging to: $LOG_FILE"
+    echo "🕐 $(date '+%Y-%m-%d %H:%M:%S')"
+    echo ""
+}
+
+# Run main function
+main "$@"

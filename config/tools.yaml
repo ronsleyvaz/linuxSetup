@@ -1,0 +1,355 @@
+# Essential Tools Configuration
+# Defines tools, categories, and distribution-specific package mappings
+
+version: "0.2.0"
+description: "Essential tools for Linux development and system administration"
+
+# Tool Categories
+categories:
+  core_development:
+    description: "Core development tools for coding and version control"
+    priority: "high"
+    batch_size: 4
+    tools:
+      - git
+      - vim
+      - curl
+      - wget
+
+  build_tools:
+    description: "Compilation and build tools"
+    priority: "high"
+    batch_size: 1
+    tools:
+      - build-essential
+
+  terminal_tools:
+    description: "Terminal multiplexers and system monitoring"
+    priority: "high"
+    batch_size: 5
+    tools:
+      - screen
+      - tmux
+      - tree
+      - htop
+      - iotop
+
+  network_tools:
+    description: "Network analysis and transfer tools"
+    priority: "medium"
+    batch_size: 4
+    tools:
+      - nmap
+      - tcpdump
+      - rsync
+      - netcat
+
+  archive_tools:
+    description: "Archive and compression utilities"
+    priority: "medium"
+    batch_size: 4
+    tools:
+      - zip
+      - unzip
+      - tar
+      - gzip
+
+  productivity_tools:
+    description: "Productivity and text processing tools"
+    priority: "medium"
+    batch_size: 3
+    tools:
+      - fzf
+      - bat
+      - jq
+
+  system_monitoring:
+    description: "System monitoring and debugging tools"
+    priority: "low"
+    batch_size: 2
+    tools:
+      - lsof
+      - strace
+
+# Distribution-specific package mappings
+package_mappings:
+  # Debian/Ubuntu (APT)
+  apt:
+    git: git
+    vim: vim
+    curl: curl
+    wget: wget
+    build-essential: build-essential
+    screen: screen
+    tmux: tmux
+    tree: tree
+    htop: htop
+    iotop: iotop
+    nmap: nmap
+    tcpdump: tcpdump
+    rsync: rsync
+    netcat: netcat-openbsd
+    zip: zip
+    unzip: unzip
+    tar: tar
+    gzip: gzip
+    fzf: fzf
+    bat: bat
+    jq: jq
+    lsof: lsof
+    strace: strace
+
+  # CentOS/RHEL/Fedora (YUM/DNF)
+  dnf:
+    git: git
+    vim: vim
+    curl: curl
+    wget: wget
+    build-essential: "gcc gcc-c++ make automake autoconf"
+    screen: screen
+    tmux: tmux
+    tree: tree
+    htop: htop
+    iotop: iotop
+    nmap: nmap
+    tcpdump: tcpdump
+    rsync: rsync
+    netcat: nc
+    zip: zip
+    unzip: unzip
+    tar: tar
+    gzip: gzip
+    fzf: fzf
+    bat: bat
+    jq: jq
+    lsof: lsof
+    strace: strace
+
+  yum:
+    git: git
+    vim: vim
+    curl: curl
+    wget: wget
+    build-essential: "gcc gcc-c++ make automake autoconf"
+    screen: screen
+    tmux: tmux
+    tree: tree
+    htop: htop
+    iotop: iotop
+    nmap: nmap
+    tcpdump: tcpdump
+    rsync: rsync
+    netcat: nc
+    zip: zip
+    unzip: unzip
+    tar: tar
+    gzip: gzip
+    fzf: fzf
+    bat: bat
+    jq: jq
+    lsof: lsof
+    strace: strace
+
+  # Arch Linux (Pacman)
+  pacman:
+    git: git
+    vim: vim
+    curl: curl
+    wget: wget
+    build-essential: base-devel
+    screen: screen
+    tmux: tmux
+    tree: tree
+    htop: htop
+    iotop: iotop
+    nmap: nmap
+    tcpdump: tcpdump
+    rsync: rsync
+    netcat: openbsd-netcat
+    zip: zip
+    unzip: unzip
+    tar: tar
+    gzip: gzip
+    fzf: fzf
+    bat: bat
+    jq: jq
+    lsof: lsof
+    strace: strace
+
+  # openSUSE (Zypper)
+  zypper:
+    git: git
+    vim: vim
+    curl: curl
+    wget: wget
+    build-essential: pattern:devel_basis
+    screen: screen
+    tmux: tmux
+    tree: tree
+    htop: htop
+    iotop: iotop
+    nmap: nmap
+    tcpdump: tcpdump
+    rsync: rsync
+    netcat: netcat-openbsd
+    zip: zip
+    unzip: unzip
+    tar: tar
+    gzip: gzip
+    fzf: fzf
+    bat: bat
+    jq: jq
+    lsof: lsof
+    strace: strace
+
+  # Alpine Linux (APK)
+  apk:
+    git: git
+    vim: vim
+    curl: curl
+    wget: wget
+    build-essential: build-base
+    screen: screen
+    tmux: tmux
+    tree: tree
+    htop: htop
+    iotop: iotop
+    nmap: nmap
+    tcpdump: tcpdump
+    rsync: rsync
+    netcat: netcat-openbsd
+    zip: zip
+    unzip: unzip
+    tar: tar
+    gzip: gzip
+    fzf: fzf
+    bat: bat
+    jq: jq
+    lsof: lsof
+    strace: strace
+
+  # macOS (Homebrew)
+  brew:
+    git: git
+    vim: vim
+    curl: curl
+    wget: wget
+    build-essential: gcc
+    screen: screen
+    tmux: tmux
+    tree: tree
+    htop: htop
+    iotop: iotop
+    nmap: nmap
+    tcpdump: tcpdump
+    rsync: rsync
+    netcat: netcat
+    zip: zip
+    unzip: unzip
+    tar: tar
+    gzip: gzip
+    fzf: fzf
+    bat: bat
+    jq: jq
+    lsof: lsof
+    strace: dtrace
+
+# Tool verification methods
+verification:
+  # Tools that can be verified by command existence
+  command_based:
+    - git
+    - vim
+    - curl
+    - wget
+    - screen
+    - tmux
+    - tree
+    - htop
+    - iotop
+    - nmap
+    - tcpdump
+    - rsync
+    - zip
+    - unzip
+    - tar
+    - gzip
+    - fzf
+    - bat
+    - jq
+    - lsof
+    - strace
+
+  # Tools that need special verification (like build-essential)
+  special_verification:
+    build-essential:
+      method: "command_exists"
+      command: "gcc"
+    netcat:
+      method: "command_exists"
+      command: "nc"
+
+# Installation notes and post-install configuration
+post_install:
+  fzf:
+    description: "Configure fzf with enhanced features"
+    actions:
+      - configure_fzf_bindings
+      - setup_fzf_completion
+
+  bat:
+    description: "Set up bat with syntax highlighting"
+    actions:
+      - verify_bat_themes
+
+  build-essential:
+    description: "Verify build tools are working"
+    actions:
+      - test_gcc_compilation
+
+# Tool dependencies (tools that should be installed before others)
+dependencies:
+  fzf:
+    - bat  # bat enhances fzf preview functionality
+
+# Optional alternatives (if primary tool fails, try alternatives)
+alternatives:
+  netcat:
+    - netcat-openbsd
+    - netcat-traditional
+    - nc
+  
+  bat:
+    - batcat  # Ubuntu sometimes installs as batcat
+
+# Minimum versions (where applicable)
+minimum_versions:
+  git: "2.0"
+  curl: "7.0"
+  vim: "8.0"
+
+# Tool descriptions for user information
+descriptions:
+  git: "Distributed version control system"
+  vim: "Advanced text editor"
+  curl: "Command line tool for transferring data"
+  wget: "Non-interactive network downloader"
+  build-essential: "Essential tools for building software"
+  screen: "Terminal multiplexer"
+  tmux: "Advanced terminal multiplexer"
+  tree: "Directory tree listing utility"
+  htop: "Interactive process viewer"
+  iotop: "I/O monitoring tool"
+  nmap: "Network discovery and security auditing"
+  tcpdump: "Network packet analyzer"
+  rsync: "Fast file synchronization tool"
+  netcat: "Networking utility for reading/writing network connections"
+  zip: "Archive and compression utility"
+  unzip: "Extract compressed files"
+  tar: "Archive manipulation utility"
+  gzip: "Compression utility"
+  fzf: "Command-line fuzzy finder"
+  bat: "Cat clone with syntax highlighting"
+  jq: "JSON processor"
+  lsof: "List open files utility"
+  strace: "System call tracer"
