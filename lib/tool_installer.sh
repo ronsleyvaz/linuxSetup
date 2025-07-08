@@ -209,6 +209,10 @@ is_tool_installed() {
         "netcat-openbsd"|"netcat")
             command_exists nc || command_exists netcat
             ;;
+        "bat")
+            # On Ubuntu/Debian, bat is often installed as batcat to avoid conflicts
+            command_exists bat || command_exists batcat
+            ;;
         *)
             # For most tools, check if command exists
             command_exists "$tool"
@@ -529,6 +533,16 @@ test_tool_functionality() {
         "fzf")
             if fzf --version >/dev/null 2>&1; then
                 log_debug "FZF version check: PASS"
+                return 0
+            fi
+            ;;
+        "bat")
+            # Test bat functionality - try both bat and batcat commands
+            if command_exists bat && bat --version >/dev/null 2>&1; then
+                log_debug "Bat version check (bat): PASS"
+                return 0
+            elif command_exists batcat && batcat --version >/dev/null 2>&1; then
+                log_debug "Bat version check (batcat): PASS"
                 return 0
             fi
             ;;
