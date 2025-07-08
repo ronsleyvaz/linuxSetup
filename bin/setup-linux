@@ -26,6 +26,7 @@ setup_logging "setup-linux"
 
 main() {
     local install_tools=false
+    local install_monitoring=false
     local list_categories=false
     local verify_only=false
     
@@ -36,11 +37,15 @@ main() {
                 install_tools=true
                 shift
                 ;;
-            --list-categories)
+            --monitor-tools|-m)
+                install_monitoring=true
+                shift
+                ;;
+            --list-categories|-l)
                 list_categories=true
                 shift
                 ;;
-            --verify-tools)
+            --verify-tools|-v)
                 verify_only=true
                 shift
                 ;;
@@ -60,6 +65,7 @@ main() {
     log_info "Script executed by: $(whoami)"
     log_info "Working directory: $(pwd)"
     log_info "Install tools: $install_tools"
+    log_info "Install monitoring: $install_monitoring"
     log_info "Verify only: $verify_only"
     
     echo "🔧 Generic Linux Setup Script"
@@ -124,10 +130,23 @@ main() {
             echo "❌ Essential tools installation failed"
             exit 1
         fi
+    elif [[ "$install_monitoring" == true ]]; then
+        log_info "Step 4: Installing monitoring tools..."
+        if install_monitoring_tools; then
+            log_info "Monitoring tools installation completed"
+            echo ""
+            echo "🔍 Verifying installation..."
+            verify_monitoring_tools
+        else
+            log_error "Monitoring tools installation failed"
+            echo "❌ Monitoring tools installation failed"
+            exit 1
+        fi
     else
         echo ""
-        echo "ℹ️  Foundation setup complete. To install essential tools, run:"
-        echo "   ./bin/setup-linux --install-tools"
+        echo "ℹ️  Foundation setup complete. Available options:"
+        echo "   ./bin/setup-linux --install-tools     # Install essential development tools"
+        echo "   ./bin/setup-linux --monitor-tools     # Install monitoring & analysis tools"
         echo ""
         echo "📋 To see available tool categories, run:"
         echo "   ./bin/setup-linux --list-categories"
@@ -151,23 +170,27 @@ main() {
 # Function to show help
 show_help() {
     cat << EOF
-Generic Linux Setup Script - v0.2.0
+Generic Linux Setup Script - v0.3.0
 
 USAGE:
     ./bin/setup-linux [OPTIONS]
 
 OPTIONS:
-    --install-tools     Install essential development and system tools
-    --verify-tools      Verify existing tool installations
-    --list-categories   Show available tool categories
-    --help, -h          Show this help message
+    --install-tools         Install essential development and system tools
+    --monitor-tools, -m     Install monitoring, analysis and entertainment tools
+    --verify-tools, -v      Verify existing tool installations
+    --list-categories, -l   Show available tool categories
+    --help, -h              Show this help message
 
 EXAMPLES:
     # Basic setup (distribution detection and package manager setup)
     ./bin/setup-linux
 
-    # Complete setup with tool installation
+    # Install essential development tools
     ./bin/setup-linux --install-tools
+
+    # Install monitoring and analysis tools
+    ./bin/setup-linux --monitor-tools
 
     # Verify existing tools
     ./bin/setup-linux --verify-tools
@@ -175,7 +198,7 @@ EXAMPLES:
     # List available tool categories
     ./bin/setup-linux --list-categories
 
-TOOL CATEGORIES:
+ESSENTIAL TOOL CATEGORIES:
     - Core Development: git, vim, curl, wget
     - Build Tools: build-essential/gcc
     - Terminal Tools: screen, tmux, tree, htop, iotop
@@ -183,6 +206,12 @@ TOOL CATEGORIES:
     - Archive Tools: zip, unzip, tar, gzip
     - Productivity: fzf, bat, jq
     - System Monitoring: lsof, strace
+
+MONITORING TOOL CATEGORIES:
+    - Interactive Monitors: btop, glances, gtop, bpytop
+    - Network Monitoring: nethogs, bandwhich
+    - System Analysis: neofetch, inxi, duf, dust, fd
+    - Entertainment: cmatrix, hollywood, sl, cowsay, lolcat
 
 For more information, see docs/README.md
 EOF

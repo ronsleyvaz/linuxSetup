@@ -79,12 +79,54 @@ get_category_data() {
                 "batch_size") echo "2" ;;
             esac
             ;;
+        "MONITORING_INTERACTIVE")
+            case "$field" in
+                "tools") echo "btop glances gtop bpytop" ;;
+                "description") echo "Interactive system monitoring dashboards" ;;
+                "priority") echo "high" ;;
+                "batch_size") echo "4" ;;
+            esac
+            ;;
+        "MONITORING_NETWORK")
+            case "$field" in
+                "tools") echo "nethogs bandwhich" ;;
+                "description") echo "Network usage monitoring by process" ;;
+                "priority") echo "medium" ;;
+                "batch_size") echo "2" ;;
+            esac
+            ;;
+        "MONITORING_ANALYSIS")
+            case "$field" in
+                "tools") echo "neofetch inxi duf dust fd" ;;
+                "description") echo "System analysis and information tools" ;;
+                "priority") echo "medium" ;;
+                "batch_size") echo "5" ;;
+            esac
+            ;;
+        "MONITORING_ENTERTAINMENT")
+            case "$field" in
+                "tools") echo "cmatrix hollywood sl cowsay lolcat" ;;
+                "description") echo "Terminal entertainment and visual effects" ;;
+                "priority") echo "low" ;;
+                "batch_size") echo "5" ;;
+            esac
+            ;;
     esac
 }
 
 # Function to get tool categories
 get_tool_categories() {
     echo "CORE_DEVELOPMENT BUILD_TOOLS TERMINAL_TOOLS NETWORK_TOOLS ARCHIVE_TOOLS PRODUCTIVITY_TOOLS SYSTEM_MONITORING"
+}
+
+# Function to get monitoring tool categories
+get_monitoring_categories() {
+    echo "MONITORING_INTERACTIVE MONITORING_NETWORK MONITORING_ANALYSIS MONITORING_ENTERTAINMENT"
+}
+
+# Function to get all categories (essential + monitoring)
+get_all_categories() {
+    echo "$(get_tool_categories) $(get_monitoring_categories)"
 }
 
 # Function to get tools for a category
@@ -127,6 +169,23 @@ get_distribution_package_name() {
                 "nmap") echo "nmap" ;;
                 "lsof") echo "lsof" ;;
                 "strace") echo "strace" ;;
+                # Monitoring tools
+                "btop") echo "btop" ;;
+                "glances") echo "glances" ;;
+                "gtop") echo "gtop" ;;
+                "bpytop") echo "bpytop" ;;
+                "nethogs") echo "nethogs" ;;
+                "bandwhich") echo "bandwhich" ;;
+                "neofetch") echo "neofetch" ;;
+                "inxi") echo "inxi" ;;
+                "duf") echo "duf" ;;
+                "dust") echo "dust" ;;
+                "fd") echo "fd-find" ;;
+                "cmatrix") echo "cmatrix" ;;
+                "hollywood") echo "hollywood" ;;
+                "sl") echo "sl" ;;
+                "cowsay") echo "cowsay" ;;
+                "lolcat") echo "lolcat" ;;
                 *) echo "$generic_name" ;;
             esac
             ;;
@@ -141,6 +200,23 @@ get_distribution_package_name() {
                 "nmap") echo "nmap" ;;
                 "lsof") echo "lsof" ;;
                 "strace") echo "strace" ;;
+                # Monitoring tools (some may need EPEL)
+                "btop") echo "btop" ;;
+                "glances") echo "glances" ;;
+                "gtop") echo "gtop" ;;
+                "bpytop") echo "bpytop" ;;
+                "nethogs") echo "nethogs" ;;
+                "bandwhich") echo "bandwhich" ;;
+                "neofetch") echo "neofetch" ;;
+                "inxi") echo "inxi" ;;
+                "duf") echo "duf" ;;
+                "dust") echo "dust" ;;
+                "fd") echo "fd-find" ;;
+                "cmatrix") echo "cmatrix" ;;
+                "hollywood") echo "hollywood" ;;
+                "sl") echo "sl" ;;
+                "cowsay") echo "cowsay" ;;
+                "lolcat") echo "lolcat" ;;
                 *) echo "$generic_name" ;;
             esac
             ;;
@@ -212,6 +288,22 @@ is_tool_installed() {
         "bat")
             # On Ubuntu/Debian, bat is often installed as batcat to avoid conflicts
             command_exists bat || command_exists batcat
+            ;;
+        "fd")
+            # fd is sometimes installed as fdfind on Ubuntu/Debian
+            command_exists fd || command_exists fdfind
+            ;;
+        "dust")
+            # dust command name
+            command_exists dust
+            ;;
+        "duf")
+            # duf command name
+            command_exists duf
+            ;;
+        "hollywood")
+            # hollywood command
+            command_exists hollywood
             ;;
         *)
             # For most tools, check if command exists
@@ -453,6 +545,129 @@ install_essential_tools() {
     return 0
 }
 
+# Function to install monitoring tools
+install_monitoring_tools() {
+    log_function_enter "install_monitoring_tools"
+    log_info "Starting monitoring tools installation"
+    
+    print_status "header" "Installing Monitoring Tools"
+    echo ""
+    
+    # Reset counters for monitoring tools
+    TOTAL_TOOLS=0
+    SUCCESSFUL_INSTALLS=0
+    FAILED_INSTALLS=0
+    SKIPPED_INSTALLS=0
+    INSTALLED_TOOLS=()
+    FAILED_TOOLS=()
+    SKIPPED_TOOLS=()
+    
+    local categories=$(get_monitoring_categories)
+    
+    # Count total tools
+    for category in $categories; do
+        local tools=$(get_category_tools "$category")
+        for tool in $tools; do
+            ((TOTAL_TOOLS++))
+        done
+    done
+    
+    log_info "Total monitoring tools to install: $TOTAL_TOOLS"
+    
+    print_status "progress" "Installing $TOTAL_TOOLS monitoring tools..."
+    
+    # Update package lists first
+    print_status "progress" "Updating package lists..."
+    if ! update_package_lists; then
+        print_status "warning" "Failed to update package lists, continuing anyway"
+        log_warn "Package list update failed, continuing with installation"
+    fi
+    
+    # Install by priority (high -> medium -> low)
+    print_status "progress" "Installing high priority monitoring tools..."
+    for category in $categories; do
+        local priority=$(get_category_priority "$category")
+        if [[ "$priority" == "high" ]]; then
+            install_category_tools "$category"
+        fi
+    done
+    
+    print_status "progress" "Installing medium priority monitoring tools..."
+    for category in $categories; do
+        local priority=$(get_category_priority "$category")
+        if [[ "$priority" == "medium" ]]; then
+            install_category_tools "$category"
+        fi
+    done
+    
+    print_status "progress" "Installing low priority monitoring tools..."
+    for category in $categories; do
+        local priority=$(get_category_priority "$category")
+        if [[ "$priority" == "low" ]]; then
+            install_category_tools "$category"
+        fi
+    done
+    
+    # Generate summary
+    print_monitoring_installation_summary
+    
+    log_info "Monitoring tools installation completed"
+    log_info "Results: $SUCCESSFUL_INSTALLS successful, $FAILED_INSTALLS failed, $SKIPPED_INSTALLS skipped"
+    
+    log_function_exit "install_monitoring_tools" 0
+    return 0
+}
+
+# Function to print monitoring installation summary
+print_monitoring_installation_summary() {
+    log_function_enter "print_monitoring_installation_summary"
+    
+    echo ""
+    print_status "header" "Monitoring Tools Installation Summary"
+    echo "======================================"
+    echo "Total tools: $TOTAL_TOOLS"
+    echo ""
+    
+    if [[ ${#INSTALLED_TOOLS[@]} -gt 0 ]]; then
+        echo "✅ Successfully installed (${#INSTALLED_TOOLS[@]}):"
+        for tool in "${INSTALLED_TOOLS[@]}"; do
+            echo "   ✅ $tool"
+        done
+        echo ""
+    fi
+    
+    if [[ ${#SKIPPED_TOOLS[@]} -gt 0 ]]; then
+        echo "ℹ️  Already installed (${#SKIPPED_TOOLS[@]}):"
+        for tool in "${SKIPPED_TOOLS[@]}"; do
+            echo "   ⏭️  $tool"
+        done
+        echo ""
+    fi
+    
+    if [[ ${#FAILED_TOOLS[@]} -gt 0 ]]; then
+        echo "⚠️  Failed to install (${#FAILED_TOOLS[@]}):"
+        for tool in "${FAILED_TOOLS[@]}"; do
+            echo "   ❌ $tool"
+        done
+        echo ""
+    fi
+    
+    local success_rate=0
+    if [[ $TOTAL_TOOLS -gt 0 ]]; then
+        success_rate=$(( (SUCCESSFUL_INSTALLS + SKIPPED_INSTALLS) * 100 / TOTAL_TOOLS ))
+    fi
+    
+    echo "📈 Success Rate: $success_rate% ($((SUCCESSFUL_INSTALLS + SKIPPED_INSTALLS))/$TOTAL_TOOLS)"
+    
+    if [[ ${#FAILED_TOOLS[@]} -eq 0 ]]; then
+        print_status "success" "All monitoring tools installed successfully!"
+    else
+        print_status "warning" "Monitoring tools installation completed with minor issues"
+    fi
+    
+    log_function_exit "print_monitoring_installation_summary" 0
+}
+
 # Function to print installation summary
 print_installation_summary() {
     echo ""
@@ -660,6 +875,99 @@ verify_essential_tools() {
     return 0
 }
 
+# Function to verify monitoring tools installation
+verify_monitoring_tools() {
+    log_function_enter "verify_monitoring_tools"
+    log_info "Verifying monitoring tools availability and functionality"
+    
+    print_status "progress" "Verifying monitoring tools..."
+    
+    local verified_count=0
+    local functional_count=0
+    local verification_failed=()
+    local total_monitoring_tools=0
+    
+    # Get all monitoring categories and tools
+    local categories=$(get_monitoring_categories)
+    
+    for category in $categories; do
+        local tools_array=($(get_category_tools "$category"))
+        local category_description=$(get_category_description "$category")
+        
+        print_status "info" "Verifying category: $category"
+        print_status "info" "Description: $category_description"
+        
+        total_monitoring_tools=$((total_monitoring_tools + ${#tools_array[@]}))
+        
+        for tool in "${tools_array[@]}"; do
+            local status="❌"
+            local details=""
+            
+            if is_tool_installed "$tool"; then
+                ((verified_count++))
+                status="✅"
+                details="installed"
+                log_debug "Monitoring tool $tool verification: PASS"
+                
+                # Test functionality
+                if test_tool_functionality "$tool"; then
+                    ((functional_count++))
+                    details="installed and functional"
+                    log_debug "Monitoring tool $tool functionality: PASS"
+                else
+                    details="installed but not functional"
+                    log_debug "Monitoring tool $tool functionality: FAIL"
+                fi
+            else
+                verification_failed+=("$tool")
+                details="not installed"
+                log_debug "Monitoring tool $tool verification: FAIL (not installed)"
+            fi
+            
+            echo "   $status $tool ($details)"
+        done
+        echo ""
+    done
+    
+    # Summary
+    echo "📊 Monitoring Tools Verification Summary"
+    echo "======================================="
+    echo "Total monitoring tools: $total_monitoring_tools"
+    echo "✅ Installed: $verified_count"
+    echo "🔧 Functional: $functional_count"
+    
+    if [[ ${#verification_failed[@]} -gt 0 ]]; then
+        echo "❌ Missing: ${#verification_failed[@]}"
+        echo ""
+        echo "Missing tools:"
+        for tool in "${verification_failed[@]}"; do
+            echo "   ❌ $tool"
+        done
+    fi
+    
+    echo ""
+    local success_rate=$((verified_count * 100 / total_monitoring_tools))
+    echo "📈 Installation Rate: $success_rate% ($verified_count/$total_monitoring_tools)"
+    
+    local functional_rate=$((functional_count * 100 / total_monitoring_tools))
+    echo "🔧 Functionality Rate: $functional_rate% ($functional_count/$total_monitoring_tools)"
+    
+    # Status assessment
+    if [[ $functional_count -eq $total_monitoring_tools ]]; then
+        print_status "success" "All monitoring tools are installed and functional"
+    elif [[ $verified_count -eq $total_monitoring_tools ]]; then
+        print_status "warning" "All monitoring tools installed, some functionality issues"
+    elif [[ $verified_count -gt $((total_monitoring_tools / 2)) ]]; then
+        print_status "warning" "Most monitoring tools installed successfully"
+    else
+        print_status "error" "Significant monitoring tool installation issues detected"
+    fi
+    
+    log_info "Monitoring tools verification completed: $verified_count/$total_monitoring_tools installed, $functional_count/$total_monitoring_tools functional"
+    log_function_exit "verify_monitoring_tools" 0
+    return 0
+}
+
 # Function to generate detailed installation report
 generate_installation_report() {
     local report_file="$LOG_DIR/installation-report-$(date +%Y%m%d-%H%M%S).json"
@@ -708,6 +1016,9 @@ list_tool_categories() {
     echo "📋 Available Tool Categories"
     echo "=========================="
     
+    echo ""
+    echo "🔧 ESSENTIAL DEVELOPMENT TOOLS:"
+    echo "==============================="
     local categories=$(get_tool_categories)
     for category in $categories; do
         local tools=$(get_category_tools "$category")
@@ -719,6 +1030,29 @@ list_tool_categories() {
         echo "   Description: $description"
         echo "   Tools: $tools"
     done
+    
+    echo ""
+    echo ""
+    echo "📊 MONITORING & ANALYSIS TOOLS:"
+    echo "==============================="
+    local monitoring_categories=$(get_monitoring_categories)
+    for category in $monitoring_categories; do
+        local tools=$(get_category_tools "$category")
+        local description=$(get_category_description "$category")
+        local priority=$(get_category_priority "$category")
+        
+        echo ""
+        echo "📦 $category ($priority priority)"
+        echo "   Description: $description"
+        echo "   Tools: $tools"
+    done
+    
+    echo ""
+    echo ""
+    echo "💡 Usage Examples:"
+    echo "   ./bin/setup-linux --install-tools    # Install essential tools"
+    echo "   ./bin/setup-linux --monitor-tools    # Install monitoring tools"
+    echo "   ./bin/setup-linux --verify-tools     # Verify all installed tools"
 }
 
 # Function to install specific tool category
