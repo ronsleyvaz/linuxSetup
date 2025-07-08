@@ -194,22 +194,22 @@ Includes:
 **User Installation (No sudo required):**
 ```bash
 # Install to ~/.local/share/linuxSetup
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s user
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/simple-install.sh | bash -s user
 
 # Or with automatic setup
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s user --run-setup
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/simple-install.sh | bash -s user --run-setup
 ```
 
 **System-wide Installation:**
 ```bash
 # Install to /opt/linuxSetup (requires sudo for /opt access)
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s system
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/simple-install.sh | bash -s system
 ```
 
 **Portable Installation:**
 ```bash
 # Install in current directory
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s portable
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/simple-install.sh | bash -s portable
 ```
 
 ### 📂 Installation Locations
@@ -225,7 +225,7 @@ curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-
 
 ```bash
 # Download simplified installer
-wget https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh
+wget https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/simple-install.sh
 chmod +x simple-install.sh
 
 # Choose installation type
@@ -243,7 +243,7 @@ If you have an existing installation in `/srv/shared/Projects/linuxSetup`:
 
 ```bash
 # Install new user version
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s user
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/simple-install.sh | bash -s user
 
 # Copy any custom configurations
 cp /srv/shared/Projects/linuxSetup/config/* ~/.local/share/linuxSetup/config/ 2>/dev/null || true
@@ -258,13 +258,13 @@ sudo rm -rf /srv/shared/Projects/linuxSetup
 
 ```bash
 # Fastest user installation with automatic setup
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s user --run-setup
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/simple-install.sh | bash -s user --run-setup
 
 # System-wide with tools installation
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s system --run-setup
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/simple-install.sh | bash -s system --run-setup
 
 # Portable for development/testing
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s portable
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/simple-install.sh | bash -s portable
 ```
 
 ### Post-Installation Setup

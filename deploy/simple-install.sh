@@ -9,7 +9,7 @@ set -euo pipefail
 # Installation metadata
 readonly INSTALLER_VERSION="2.0.0"
 readonly PROJECT_NAME="linuxSetup"
-readonly GITHUB_REPO="https://github.com/user/linuxSetup.git"
+readonly GITHUB_REPO="https://github.com/ronsleyvaz/linuxSetup.git"
 
 # Installation types and default directories
 readonly USER_DEFAULT_DIR="$HOME/.local/share/linuxSetup"

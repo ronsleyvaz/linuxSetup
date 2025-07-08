@@ -6,30 +6,30 @@
 
 ```bash
 # User installation (recommended - no sudo required)
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s user
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/simple-install.sh | bash -s user
 
 # System-wide installation
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s system
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/simple-install.sh | bash -s system
 
 # Portable installation
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s portable --run-setup
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/simple-install.sh | bash -s portable --run-setup
 ```
 
 ### Legacy Installation (Complex)
 
 ```bash
 # Download and run complex installer (legacy)
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/install.sh | bash
 
 # Or with custom options
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash -s -- --auto-setup --dir /opt/linuxSetup
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/install.sh | bash -s -- --auto-setup --dir /opt/linuxSetup
 ```
 
 ### Manual Installation
 
 ```bash
 # Clone repository
-git clone https://github.com/user/linuxSetup.git /srv/shared/Projects/linuxSetup
+git clone https://github.com/ronsleyvaz/linuxSetup.git /srv/shared/Projects/linuxSetup
 cd /srv/shared/Projects/linuxSetup
 
 # Make scripts executable
@@ -76,23 +76,23 @@ chmod +x deploy/install.sh
 
 ```bash
 # Basic installation
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/install.sh | bash
 
 # With automatic setup
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash -s -- --auto-setup
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/install.sh | bash -s -- --auto-setup
 
 # Custom directory
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash -s -- --dir /opt/linuxSetup
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/install.sh | bash -s -- --dir /opt/linuxSetup
 
 # Without dependencies (if already installed)
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash -s -- --no-deps
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/install.sh | bash -s -- --no-deps
 ```
 
 ### Method 2: Git Clone
 
 ```bash
 # Standard location
-sudo git clone https://github.com/user/linuxSetup.git /srv/shared/Projects/linuxSetup
+sudo git clone https://github.com/ronsleyvaz/linuxSetup.git /srv/shared/Projects/linuxSetup
 cd /srv/shared/Projects/linuxSetup
 
 # Set permissions
@@ -208,7 +208,7 @@ FROM ubuntu:22.04
 RUN apt-get update && apt-get install -y curl bash sudo
 
 # Install Linux Setup System
-RUN curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash -s -- --auto-setup --dir /opt/linuxSetup
+RUN curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/install.sh | bash -s -- --auto-setup --dir /opt/linuxSetup
 
 # Run setup
 RUN /opt/linuxSetup/bin/setup-linux --install-tools
@@ -221,7 +221,7 @@ CMD ["./bin/check-linux", "--services"]
 
 ```bash
 # macOS-specific installation
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash -s -- --auto-setup
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/install.sh | bash -s -- --auto-setup
 
 # Setup development environment with macOS tools
 ./bin/setup-dev --all --shell zsh
@@ -243,7 +243,7 @@ curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install
   tasks:
     - name: Download installer
       get_url:
-        url: https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh
+        url: https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/install.sh
         dest: /tmp/install-linuxsetup.sh
         mode: '0755'
     
@@ -272,7 +272,7 @@ resource "null_resource" "install_linux_setup" {
   
   provisioner "remote-exec" {
     inline = [
-      "curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash -s -- --auto-setup",
+      "curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/install.sh | bash -s -- --auto-setup",
       "/srv/shared/Projects/linuxSetup/bin/setup-linux --install-tools",
       "/srv/shared/Projects/linuxSetup/bin/configure-linux --all"
     ]
@@ -322,10 +322,10 @@ docker run --rm -v $(pwd):/app ubuntu:22.04 /app/tests/run_basic_tests.sh
 
 ```bash
 # Verify installer integrity (when available)
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh.sha256 | sha256sum -c
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/install.sh.sha256 | sha256sum -c
 
 # Review installer script before running
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | less
+curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/install.sh | less
 ```
 
 ### Post-Installation Security
@@ -431,7 +431,7 @@ for server in "${SERVERS[@]}"; do
     echo "Deploying to $server..."
     
     ssh -i "$SSH_KEY" "$SSH_USER@$server" << 'EOF'
-        curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash -s -- --auto-setup
+        curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/install.sh | bash -s -- --auto-setup
         /srv/shared/Projects/linuxSetup/bin/setup-linux --install-tools
         /srv/shared/Projects/linuxSetup/bin/configure-linux --all
 EOF
