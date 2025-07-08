@@ -8,12 +8,11 @@
 # Set strict error handling
 set -euo pipefail
 
-# Get script directory and set up paths
+# Get installation paths dynamically
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 LIB_DIR="$PROJECT_ROOT/lib"
 CONFIG_DIR="$PROJECT_ROOT/config"
-LOG_DIR="$PROJECT_ROOT/logs"
 
 # Source library functions
 source "$LIB_DIR/common.sh"

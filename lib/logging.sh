@@ -18,11 +18,15 @@ setup_logging() {
     local script_name="$1"
     local log_level="${2:-INFO}"
     
+    # Get user-writable log directory
+    local log_dir
+    log_dir=$(get_log_directory)
+    
     # Ensure log directory exists
-    create_directory "$LOG_DIR"
+    create_directory "$log_dir"
     
     # Create log file with timestamp
-    LOG_FILE="$LOG_DIR/${script_name}-$(date +%Y%m%d-%H%M%S).log"
+    LOG_FILE="$log_dir/${script_name}-$(date +%Y%m%d-%H%M%S).log"
     LOG_LEVEL="$log_level"
     
     # Initialize log file
@@ -40,7 +44,7 @@ Working Directory: $(pwd)
 EOF
     
     # Set log file permissions
-    chmod 644 "$LOG_FILE"
+    chmod 644 "$LOG_FILE" 2>/dev/null || true
     
     log_info "Logging initialized: $LOG_FILE"
 }

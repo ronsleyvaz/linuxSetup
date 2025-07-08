@@ -2,10 +2,23 @@
 
 ## 🚀 Quick Deployment
 
-### One-Line Installation
+### Simplified One-Line Installation
 
 ```bash
-# Download and run installer
+# User installation (recommended - no sudo required)
+curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s user
+
+# System-wide installation
+curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s system
+
+# Portable installation
+curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s portable --run-setup
+```
+
+### Legacy Installation (Complex)
+
+```bash
+# Download and run complex installer (legacy)
 curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash
 
 # Or with custom options

@@ -6,7 +6,7 @@
 # Strict error handling
 set -euo pipefail
 
-# Script directory and library loading
+# Get installation paths dynamically
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="$(dirname "$SCRIPT_DIR")/lib"
 

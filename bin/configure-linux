@@ -7,11 +7,10 @@
 
 set -euo pipefail
 
-# Get script directory and set up paths
+# Get installation paths dynamically
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 LIB_DIR="$PROJECT_ROOT/lib"
-LOG_DIR="$PROJECT_ROOT/logs"
 
 # Early help check before sourcing libraries
 for arg in "$@"; do

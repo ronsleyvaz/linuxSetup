@@ -3,6 +3,67 @@
 # Common utility functions for Linux Setup System
 #
 
+# Portable installation path detection
+get_install_root() {
+    # Check for user-local installation first
+    if [[ -f "$HOME/.local/share/linuxSetup/bin/setup-linux" ]]; then
+        echo "$HOME/.local/share/linuxSetup"
+    # Check for system-wide installation
+    elif [[ -f "/opt/linuxSetup/bin/setup-linux" ]]; then
+        echo "/opt/linuxSetup"
+    # Check legacy location
+    elif [[ -f "/srv/shared/Projects/linuxSetup/bin/setup-linux" ]]; then
+        echo "/srv/shared/Projects/linuxSetup"
+    # Fallback to script location
+    else
+        echo "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+    fi
+}
+
+# Get user-writable log directory
+get_log_directory() {
+    local log_dir
+    
+    # Try user-specific directories first
+    if [[ -n "${XDG_DATA_HOME:-}" ]]; then
+        log_dir="$XDG_DATA_HOME/linuxSetup/logs"
+    else
+        log_dir="$HOME/.local/share/linuxSetup/logs"
+    fi
+    
+    # Create directory if it doesn't exist and is writable
+    if [[ ! -d "$log_dir" ]]; then
+        if mkdir -p "$log_dir" 2>/dev/null; then
+            echo "$log_dir"
+            return 0
+        fi
+    elif [[ -w "$log_dir" ]]; then
+        echo "$log_dir"
+        return 0
+    fi
+    
+    # Fallback to temp directory
+    log_dir="/tmp/linuxSetup-$(whoami)"
+    mkdir -p "$log_dir" 2>/dev/null || true
+    echo "$log_dir"
+}
+
+# Get installation type
+get_install_type() {
+    local install_root
+    install_root=$(get_install_root)
+    
+    if [[ "$install_root" == "$HOME/.local/share/linuxSetup" ]]; then
+        echo "user"
+    elif [[ "$install_root" == "/opt/linuxSetup" ]]; then
+        echo "system"
+    elif [[ "$install_root" == "/srv/shared/Projects/linuxSetup" ]]; then
+        echo "legacy"
+    else
+        echo "portable"
+    fi
+}
+
 # Color codes for output
 readonly RED='\033[0;31m'
 readonly GREEN='\033[0;32m'
@@ -117,22 +178,35 @@ create_directory() {
     local mode="${2:-755}"
     
     if [[ ! -d "$dir" ]]; then
-        mkdir -p "$dir"
-        chmod "$mode" "$dir"
-        print_status "success" "Created directory: $dir"
+        if mkdir -p "$dir" 2>/dev/null; then
+            chmod "$mode" "$dir" 2>/dev/null || true
+            print_status "success" "Created directory: $dir"
+        else
+            print_status "warning" "Could not create directory: $dir"
+            return 1
+        fi
     fi
 }
 
 # Function to backup file
 backup_file() {
     local file="$1"
-    local backup_dir="${2:-/tmp/linuxsetup_backup}"
+    local backup_dir="${2:-}"
+    
+    # Use default backup directory if not specified
+    if [[ -z "$backup_dir" ]]; then
+        backup_dir="$(get_log_directory)/config_backups"
+    fi
     
     if [[ -f "$file" ]]; then
-        create_directory "$backup_dir"
-        local backup_name="$(basename "$file").backup.$(date +%Y%m%d_%H%M%S)"
-        cp "$file" "$backup_dir/$backup_name"
-        print_status "info" "Backed up $file to $backup_dir/$backup_name"
+        if create_directory "$backup_dir"; then
+            local backup_name="$(basename "$file").backup.$(date +%Y%m%d_%H%M%S)"
+            if cp "$file" "$backup_dir/$backup_name" 2>/dev/null; then
+                print_status "info" "Backed up $file to $backup_dir/$backup_name"
+            else
+                print_status "warning" "Could not backup $file"
+            fi
+        fi
     fi
 }
 

@@ -183,61 +183,104 @@ Includes:
 ## 🔧 Installation
 
 ### Prerequisites
-- Linux distribution (see supported systems above)
+- Linux distribution or macOS (see supported systems above)
 - Bash shell (version 4.0+)
-- Sudo privileges
 - Internet connectivity
-- 1GB+ free disk space
+- 100MB+ free disk space
+- curl or wget (for installation)
 
-### Quick Install
+### 🚀 Quick Install (Recommended)
+
+**User Installation (No sudo required):**
 ```bash
-# Clone the repository
-git clone [repository-url] /srv/shared/Projects/linuxSetup
-cd /srv/shared/Projects/linuxSetup
+# Install to ~/.local/share/linuxSetup
+curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s user
 
-# Make script executable
-chmod +x bin/setup-linux
-
-# Run the setup
-./bin/setup-linux
+# Or with automatic setup
+curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s user --run-setup
 ```
 
-### Manual Install
+**System-wide Installation:**
 ```bash
-# Create directory structure
-mkdir -p /srv/shared/Projects/linuxSetup/{bin,lib,config,logs,docs,tests}
-
-# Copy files to appropriate directories
-# [Follow detailed installation instructions in docs/INSTALL.md]
+# Install to /opt/linuxSetup (requires sudo for /opt access)
+curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s system
 ```
 
-## 🚀 Quick Deployment
+**Portable Installation:**
+```bash
+# Install in current directory
+curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s portable
+```
 
-### One-Line Installation (Recommended)
+### 📂 Installation Locations
+
+| Type | Directory | Permissions | PATH Integration |
+|------|-----------|-------------|------------------|
+| **user** | `~/.local/share/linuxSetup` | User-writable | Auto-added to shell |
+| **system** | `/opt/linuxSetup` | May need sudo | Symlinks in `/usr/local/bin` |
+| **legacy** | `/srv/shared/Projects/linuxSetup` | May need sudo | Manual PATH setup |
+| **portable** | `./linuxSetup` | Current directory | Manual PATH setup |
+
+### 🛠️ Manual Installation
 
 ```bash
-# Install on Linux or macOS
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash
+# Download simplified installer
+wget https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh
+chmod +x simple-install.sh
 
-# With automatic setup
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash -s -- --auto-setup
+# Choose installation type
+./simple-install.sh user          # User installation
+./simple-install.sh system        # System installation  
+./simple-install.sh portable      # Portable installation
 
 # Custom directory
-curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/install.sh | bash -s -- --dir /opt/linuxSetup
+./simple-install.sh user --dir ~/my-tools/linuxSetup
 ```
 
-### Manual Installation
+### 🔄 Migration from Legacy Installation
+
+If you have an existing installation in `/srv/shared/Projects/linuxSetup`:
 
 ```bash
-# Clone repository
-git clone https://github.com/user/linuxSetup.git /srv/shared/Projects/linuxSetup
-cd /srv/shared/Projects/linuxSetup
+# Install new user version
+curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s user
 
-# Make scripts executable
-chmod +x bin/* tests/*.sh
+# Copy any custom configurations
+cp /srv/shared/Projects/linuxSetup/config/* ~/.local/share/linuxSetup/config/ 2>/dev/null || true
 
-# Run complete setup
-./bin/setup-linux --install-tools
+# Remove old installation (optional)
+sudo rm -rf /srv/shared/Projects/linuxSetup
+```
+
+## 🚀 Quick Deployment Examples
+
+### Single-Line Installation
+
+```bash
+# Fastest user installation with automatic setup
+curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s user --run-setup
+
+# System-wide with tools installation
+curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s system --run-setup
+
+# Portable for development/testing
+curl -fsSL https://raw.githubusercontent.com/user/linuxSetup/main/deploy/simple-install.sh | bash -s portable
+```
+
+### Post-Installation Setup
+
+```bash
+# Basic system detection
+~/.local/share/linuxSetup/bin/setup-linux
+
+# Install essential tools
+~/.local/share/linuxSetup/bin/setup-linux --install-tools
+
+# Check system health
+~/.local/share/linuxSetup/bin/check-linux
+
+# Configure services (may require sudo)
+~/.local/share/linuxSetup/bin/configure-linux
 ```
 
 ## 📖 Usage
@@ -391,30 +434,43 @@ chmod +x bin/* tests/*.sh
 ./bin/setup-linux --config custom-profile.yaml
 ```
 
-### Example: Complete Setup Output
+### Example: User Installation Output
 ```
-🔧 Generic Linux Setup Script
-----------------------------
-📝 Logging to: logs/setup-linux-20250706-095027.log
-✅ Detected: Debian GNU/Linux 12
-✅ Package manager: apt
-✅ Package manager test successful
-🔄 Installing 23 essential tools...
-✅ Package lists updated
-🔄 Installing high priority tools...
-ℹ️  Installing CORE_DEVELOPMENT
-   ✅ git (already installed)
-   ✅ vim (already installed)
-   ✅ curl (already installed)
-   ✅ wget (already installed)
-📊 Essential Tools Installation Summary
-======================================
-Total tools: 23
-✅ Successfully installed (1): jq
-ℹ️  Already installed (21): git, vim, curl, wget, build-essential...
-⚠️  Failed to install (1): bat
-📈 Success Rate: 96% (22/23)
-🎉 Setup Complete!
+🚀 Simplified Universal Linux Setup & Monitoring System Installer v2.0.0
+
+ℹ️  Detected OS: linux
+ℹ️  Installation type: user
+ℹ️  Installation directory: /home/user/.local/share/linuxSetup
+ℹ️  Downloading Linux Setup & Monitoring System...
+ℹ️  Using tarball download method...
+✅ Project downloaded successfully
+ℹ️  Setting up basic permissions...
+✅ Permissions configured
+ℹ️  Setting up PATH integration...
+✅ Added to PATH in /home/user/.bashrc
+ℹ️  Running installation verification...
+✅ Installation verified successfully
+
+🚀 Installation Complete!
+
+📍 Installation Directory: /home/user/.local/share/linuxSetup
+📦 Installation Type: user
+🖥️  Operating System: linux
+
+🚀 Quick Start:
+  # Run system setup
+  /home/user/.local/share/linuxSetup/bin/setup-linux
+
+  # Install essential tools
+  /home/user/.local/share/linuxSetup/bin/setup-linux --install-tools
+
+  # Check system health
+  /home/user/.local/share/linuxSetup/bin/check-linux
+
+💡 Restart your terminal to use commands from PATH
+📖 Documentation: /home/user/.local/share/linuxSetup/README.md
+
+✅ Ready to use! 🎉
 ```
 
 ### Example: System Health Check Output
