@@ -15,9 +15,9 @@ cd /srv/shared/Projects/linuxSetup
 cat logs/setup-linux-*.log
 ```
 
-## 📋 Current Status: v1.0.0-stable
+## 📋 Current Status: v0.4.0-stable
 
-**🎉 PRODUCTION READY - Complete multi-platform solution**
+**🎉 PRODUCTION READY - Complete monitoring & development toolkit**
 
 ### ✅ What's Working (All Features Complete)
 
@@ -29,12 +29,19 @@ cat logs/setup-linux-*.log
 - **Error handling**: Graceful degradation and informative error messages
 
 #### Step 2: Essential Tools Installation ✅
-- **24 essential tools**: Core development, terminal, network, archive, productivity, and system monitoring tools
+- **23 essential tools**: Core development, terminal, network, archive, productivity, and system monitoring tools
 - **Smart installation**: Batch installation with error recovery and individual fallback
 - **Tool verification**: Comprehensive functionality testing after installation
 - **Distribution-specific mapping**: Automatic package name translation across distributions
 - **Installation reporting**: Detailed JSON reports and statistics
 - **Command-line options**: Multiple operation modes (install, verify, list categories)
+
+#### Step 2B: Monitoring Tools Suite ✅ NEW!
+- **16 monitoring tools**: Interactive monitors, network analysis, system information, and entertainment
+- **4 specialized categories**: Interactive dashboards, network monitoring, system analysis, visual effects
+- **Modern alternatives**: btop (better htop), duf (better df), dust (better du), fd (better find)
+- **Professional monitoring**: glances, nethogs, neofetch for comprehensive system analysis
+- **Separate installation**: `--monitor-tools` for targeted deployment
 
 #### Step 3: System Health Monitoring ✅
 - **Real-time system status**: CPU, memory, disk usage with color-coded warnings
@@ -290,17 +297,24 @@ curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/s
 # Foundation setup (distribution detection and package manager setup)
 ./bin/setup-linux
 
-# Complete setup with essential tools installation
+# Install essential development tools (23 tools)
 ./bin/setup-linux --install-tools
+
+# Install monitoring & analysis tools (16 tools) - NEW!
+./bin/setup-linux --monitor-tools
+./bin/setup-linux -m                    # Short alias
 
 # Verify existing tool installations
 ./bin/setup-linux --verify-tools
+./bin/setup-linux -v                    # Short alias
 
 # List available tool categories
 ./bin/setup-linux --list-categories
+./bin/setup-linux -l                    # Short alias
 
 # Show help
 ./bin/setup-linux --help
+./bin/setup-linux -h                    # Short alias
 ```
 
 ### System Health Monitoring
@@ -413,7 +427,7 @@ curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/s
 ./bin/generate-report --help
 ```
 
-### Tool Categories Available
+### Essential Tool Categories (23 tools)
 - **Core Development**: git, vim, curl, wget (high priority)
 - **Build Tools**: build-essential/gcc (high priority)  
 - **Terminal Tools**: screen, tmux, tree, htop, iotop (high priority)
@@ -421,6 +435,12 @@ curl -fsSL https://raw.githubusercontent.com/ronsleyvaz/linuxSetup/main/deploy/s
 - **Archive Tools**: zip, unzip, tar, gzip (medium priority)
 - **Productivity**: fzf, bat, jq (medium priority)
 - **System Monitoring**: lsof, strace (low priority)
+
+### Monitoring Tool Categories (16 tools) - NEW!
+- **Interactive Monitors**: btop, glances, gtop, bpytop (high priority)
+- **Network Monitoring**: nethogs, bandwhich (medium priority)
+- **System Analysis**: neofetch, inxi, duf, dust, fd (medium priority)
+- **Entertainment**: cmatrix, hollywood, sl, cowsay, lolcat (low priority)
 
 ### Advanced Usage (Coming Soon)
 ```bash

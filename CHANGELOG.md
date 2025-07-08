@@ -6,16 +6,78 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-### Planned for v0.4.0
-- Service configuration (SSH, firewall, NTP)
-- Security hardening automation
-- User and permission management
-- Web dashboard interface
-
 ### Planned for v0.5.0
 - Multi-distribution testing and validation
-- Advanced monitoring features
+- Web dashboard interface
 - Configuration management system
+- Advanced monitoring automation
+
+---
+
+## [0.4.0] - 2025-07-08
+
+### 🎉 Major Release - Monitoring Tools & Enhanced UX
+
+This release adds comprehensive monitoring tools support and significantly improves user experience with short command aliases and expanded toolkit.
+
+#### ✨ Features Added
+
+##### 📊 Monitoring Tools Suite (`--monitor-tools`)
+- **16 new monitoring and analysis tools** across 4 specialized categories
+- **Interactive Monitors**: btop, glances, gtop, bpytop - Modern system resource monitors
+- **Network Monitoring**: nethogs, bandwhich - Process-level network usage tracking
+- **System Analysis**: neofetch, inxi, duf, dust, fd - Enhanced system information and file utilities
+- **Entertainment Tools**: cmatrix, hollywood, sl, cowsay, lolcat - Terminal visual effects and fun
+
+##### 🚀 Enhanced User Experience
+- **Short command aliases**: `-m` (monitor-tools), `-v` (verify-tools), `-l` (list-categories), `-h` (help)
+- **Separate installation paths**: Essential tools vs monitoring tools for targeted deployment
+- **Enhanced help system**: Comprehensive tool categorization and usage examples
+- **Improved list categories**: Shows both essential and monitoring tools with descriptions
+
+##### 🔧 Technical Improvements
+- **Cross-platform package mapping**: Support for monitoring tools across apt, dnf, pacman, zypper, apk
+- **Enhanced tool verification**: Special handling for tools with different command names (fd/fdfind, bat/batcat)
+- **Priority-based installation**: High/medium/low priority installation order for optimal UX
+- **Comprehensive functionality testing**: Version checks and command verification for all tools
+
+#### 🛠️ Tool Categories Expanded
+
+**ESSENTIAL DEVELOPMENT TOOLS (23 tools):**
+- Core Development, Build Tools, Terminal Tools, Network Tools, Archive Tools, Productivity, System Monitoring
+
+**MONITORING & ANALYSIS TOOLS (16 tools):**
+- Interactive Monitors, Network Monitoring, System Analysis, Entertainment
+
+#### 📖 Usage Examples
+```bash
+# Install essential development tools
+./bin/setup-linux --install-tools
+
+# Install monitoring and analysis tools  
+./bin/setup-linux --monitor-tools
+./bin/setup-linux -m                    # Short alias
+
+# List all available tools
+./bin/setup-linux --list-categories
+./bin/setup-linux -l                    # Short alias
+
+# Verify all installed tools
+./bin/setup-linux --verify-tools
+./bin/setup-linux -v                    # Short alias
+```
+
+#### 🎯 Benefits
+- **39 total tools available** (up from 23)
+- **Specialized toolkits** for different use cases
+- **Faster command entry** with short aliases
+- **Better user experience** with clear categorization
+- **Professional monitoring setup** for system administrators
+
+#### 🧪 Compatibility
+- Tested on Ubuntu 24.04 LTS ARM64
+- Cross-platform package mapping for major Linux distributions
+- macOS support maintained for applicable tools
 
 ---
 
